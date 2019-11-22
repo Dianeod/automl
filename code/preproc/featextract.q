@@ -33,12 +33,13 @@ prep.freshsignificance:{[t;tgt]
 /. r > table with features created in accordance with the normal feature creation procedure 
 prep.normalcreate:{[t;p]
   fe_start:.z.T;
+  t:(`$ssr[;"_";""]each string cols t)xcol t;
   // Time columns are extracted such that constituent parts can be used 
   // but are not transformed according to remaining procedures
   tcols:.ml.i.fndcols[t;"dmntvupz"];
   tb:(cols[t]except tcols)#t;
   tb:prep.i.truncsvd[tb;::;2];
-  tb:prep.i.bulktransform[tb;::];
+  tb:prep.i.bulktransform[tb;::;key bulkname;1b];
   tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
   // Apply the transform of time specific columns as appropriate
   if[0<count tcols;tb^:.ml.timesplit[tcols#t;::]];

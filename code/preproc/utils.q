@@ -118,22 +118,27 @@ prep.i.credibility:{[t;c;tgt]
   names:(`$string[c],\:"_credibility_estimate");
   x^flip names!scores}
 
+bulkname:`multi`sum`div`sub!("_multi";"_sum";"_div";"_sub")
+bulkfnc:`multi`sum`div`sub! (prd;sum;{first(%)x};{last deltas x})
+
 // Perform bulk transformations of hij columns for all unique linear combinations of such columns
+/* fncs = functions to apply to the input columns
+/* b    = boolean indicating whether to make combinations of input columns
 /. r > table with bulk transformtions applied appropriately
-prep.i.bulktransform:{[t;c]
+prep.i.bulktransform:{[t;c;fncs;b]
   if[(::)~c;c:.ml.i.fndcols[t;"hij"]];
   // Name the columns based on the unique combinations
-  n:raze(,'/)`$(raze each string c@:.ml.combs[count c;2]),\:/:("_multi";"_sum";"_div";"_sub");
+  n:raze(,'/)`$("_"sv'string $[b;c@:.ml.combs[count c;2];c]),\:/:bulkname[fncs];
   // Apply transforms based on naming conventions chosen and re-form the table with these appended
-  flip flip[t],n!(,/)(prd;sum;{first(%)x};{last deltas x})@/:\:t c}
+  flip flip[t],n!(,/)(bulkfnc[fncs])@/:\:t c}
 
 // Perform a truncated single value decomposition on unique linear combinations of float columns
 // https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html
 prep.i.truncsvd:{[t;c;p]
   if[(::)~c;c:.ml.i.fndcols[t;"f"]];
-  c@:.ml.combs[count c,:();p];
+  $[(::)~p;c;c@:.ml.combs[count c,:();p]];
   svd:.p.import[`sklearn.decomposition;`:TruncatedSVD;`n_components pykw 1];
-  flip flip[t],(`$(raze each string c),\:"_trsvd")!{raze x[`:fit_transform][flip y]`}[svd]each t c}
+  flip flip[t],(`$("_"sv'string c),\:"_trsvd")!{raze x[`:fit_transform][flip y]`}[svd]each t c}
 
 // Error message related to the 'refusal' of the feature significance tests to 
 // find appropriate columns to explain the data from those produced

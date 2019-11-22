@@ -173,8 +173,14 @@ i.normalproc:{[t;p]
   t:prep.i.symencode[t;10;0;p;p`symencode];
   t:prep.i.nullencode[t;med];
   t:.ml.infreplace[t];
-  t:first prep.normalcreate[t;::];
+  normtab:normalcolcreate[;cols t]each p[`features];
+  trunccol:exec coln from normtab where fnc=`trsvd;
+  t:prep.i.truncsvd[t;trunccol;::];
+  bulkt:select from normtab where not fnc in `norm`trsvd;
+  if[0<count[bulkt];t:(uj/){prep.i.bulktransform[y;x`coln;x`fnc;0b]}[;t]each 0!
+    select coln by fnc from select fnc by coln from bulkt];
   flip value flip p[`features]#t}
+  
 
 // Apply feature creation and encoding procedures for FRESH on new data
 /. r > table with feature creation and encodings applied appropriately
