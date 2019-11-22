@@ -168,42 +168,87 @@ i.getmeta:{[fp]
 // Apply feature creation and encoding procedures for 'normal' on new data
 /. r > table with feature creation and encodings applied appropriately
 i.normalproc:{[t;p]
+  t:i.rmvunder t;
   prep.i.autotype[t;p`typ;p];
-  // symbol encoding completed based on encoding applied in a previous 'run'
+  // Symbol encoding completed based on encoding applied in a previous 'run'
   t:prep.i.symencode[t;10;0;p;p`symencode];
   t:prep.i.nullencode[t;med];
   t:.ml.infreplace[t];
-  normtab:normalcolcreate[;cols t]each p[`features];
+  // Create the table needed to extract features on a column/function basis
+  normtab:i.normecols[;cols t]each p[`features];
+  // Names of all the columns which truncated singular value decomposition is applied
   trunccol:exec coln from normtab where fnc=`trsvd;
   t:prep.i.truncsvd[t;trunccol;::];
   bulkt:select from normtab where not fnc in `norm`trsvd;
-  if[0<count[bulkt];t:(uj/){prep.i.bulktransform[y;x`coln;x`fnc;0b]}[;t]each 0!
-    select coln by fnc from select fnc by coln from bulkt];
+  if[0<count[bulkt];
+    // new table denoting how new functions are to be applied to data
+    ntab:0!select coln by fnc from select fnc by coln from bulkt;
+    // perform transfomation as appropriate for each required bulk modification
+    t:(uj/){prep.i.bulktransform[y;x`coln;x`fnc;0b]}[;t]each ntab];
   flip value flip p[`features]#t}
   
 
 // Apply feature creation and encoding procedures for FRESH on new data
 /. r > table with feature creation and encodings applied appropriately
 i.freshproc:{[t;p]
-  t:(`$ssr[;"_";""]each string cols t) xcol t;
   t:prep.i.autotype[t;p`typ;p];
   agg:p`aggcols;
-  // apply symbol encoding based on a previous run of automl
+  // Apply symbol encoding based on a previous run of automl
   t:prep.i.symencode[t;10;0;p;p`symencode];
+  t:i.rmvunder t;
   cols2use:k where not (k:cols t)in agg;
-  // extract relevant functions based on the significant features determined by the model
-  appfncs:`coln xgroup distinct colextract[;cols t]each p`features;
-  t:prep.i.nullencode[value agg xkey p[`features]xcols 0!
-     (uj/){[t;agg;coln;paramtab].ml.fresh.createfeatures[t;agg;coln;`f xkey flip paramtab]
-     }[t;agg]'[(0!appfncs)`coln;value appfncs];med];
+  // Create table denoting all functions to be applied to each column
+  appfncs:`coln xgroup distinct i.freshecols[;cols t]each p`features;
+  // Modified fresh feature creation for column by column extraction
+  fproc:{[x;y;z;r].ml.fresh.createfeatures[x;y;z;`f xkey flip r]};
+  // Feature creation applied on appropriate columns
+  t:value agg xkey p[`features]xcols 0!(uj/)fproc[t;agg]'[(0!appfncs)`coln;value appfncs];
+  t:prep.i.nullencode[t;med];
   t:.ml.infreplace t;
   // It is not guaranteed that new feature creation will produce the all requisite features 
-  // if this is not the case dummy features are added to the data
+  // if this is not the case dummy features are added to the data, column reordering may be
+  // required in some circumstances.
   if[not all ftc:p[`features]in cols t;
     newcols:p[`features]where not ftc;
-    t:p[`features] xcols flip flip[t],newcols!((count newcols;count t)#0f),()];
+    t:p[`features]xcols flip flip[t],newcols!((count newcols;count t)#0f),()];
   flip value flip p[`features]#"f"$0^t}
 
+
+// Extract the table that is to be used for the application of 
+// functions with(out) parameters to individual columns in a table
+/* efeat = extracted features we want to build a new table from
+/* cvals = columns of the original table
+/. r   > a table with the function and parameter information to be applied to tabular columns
+i.freshecols:{[efeat;cvals]
+  // Separate the column names for use in extracting features appropriately
+  sepcols:`$i.separ[efeat];
+  // Extract the required original table column name
+  coln:cvals where cvals in sepcols;
+  // Extract function and hyper parameters from the extracted feature names
+  fncparams:sepcols except coln;
+  // Extract function name
+  fnc:first fncparams;
+  $[0<.ml.fresh.params[fnc]`pnum;
+    [params:1_fncparams;
+     // For a given function extract the location of parameter names
+     ploc:where params in .ml.fresh.params[fnc]`pnames;
+     // The string representation of hyperparameter values
+     pv:string params ploc+1;
+     // Find all locations that need to be converted to floats
+     pvloc:where sum("o";"w")in/:\:pv;
+     paramv:enlist each"J"$pv;
+     // Extract the floating point representation of relevant parameters
+     paramv[pvloc]:enlist each"F"$ssr[;"o";"."]each pv[pvloc]];
+     (paramn:();paramv:())];
+  `coln`f`pnum`pnames`pvals`valid!(coln;fnc;count[ploc];params ploc;paramv;1b)}
+
+/. r   > a table with the function and parameter information to be applied to normal tabular columns
+i.normecols:{[efeat;cvals]
+  coln:cvals where cvals in cname:`$i.separ[efeat];
+  `coln`fnc!(coln;$[count[coln]~count[cname];`norm;last cname])
+  }
+
+i.separ:{"_" vs string x}
 
 // Create the folders that are required for the saving of the config,models, images and reports
 /* dt  = date and time dictionary denoting the start of a run
@@ -244,3 +289,8 @@ i.kerascheck:{[mdls;tts;tgt]
 /* path = the linux 'like' path
 /. r    > the path modified to be suitable for windows systems
 i.ssrwin:{[path]$[.z.o like "w*";ssr[path;"/";"\\"];path]}
+
+// Remove underscores from column names, this is needed to ensure that running on new 
+// data can make use of functions that speed up execution of feature extraction
+/. r > table with columns renamed appropriately
+i.rmvunder:{[t](`$ssr[;"_";""]each string cols t) xcol t}
