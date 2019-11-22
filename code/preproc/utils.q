@@ -118,8 +118,9 @@ prep.i.credibility:{[t;c;tgt]
   names:(`$string[c],\:"_credibility_estimate");
   x^flip names!scores}
 
-bulkname:`multi`sum`div`sub!("_multi";"_sum";"_div";"_sub")
-bulkfnc:`multi`sum`div`sub! (prd;sum;{first(%)x};{last deltas x})
+// Helper dictionaries for conversions involving bulk transformations
+prep.i.bulkname:`multi`sum`div`sub!("_multi";"_sum";"_div";"_sub")
+prep.i.bulkfnc:`multi`sum`div`sub! (prd;sum;{first(%)x};{last deltas x})
 
 // Perform bulk transformations of hij columns for all unique linear combinations of such columns
 /* fncs = functions to apply to the input columns
@@ -128,9 +129,9 @@ bulkfnc:`multi`sum`div`sub! (prd;sum;{first(%)x};{last deltas x})
 prep.i.bulktransform:{[t;c;fncs;b]
   if[(::)~c;c:.ml.i.fndcols[t;"hij"]];
   // Name the columns based on the unique combinations
-  n:raze(,'/)`$("_"sv'string $[b;c@:.ml.combs[count c;2];c]),\:/:bulkname[fncs];
+  n:raze(,'/)`$("_"sv'string $[b;c@:.ml.combs[count c;2];c]),\:/:prep.i.bulkname[fncs];
   // Apply transforms based on naming conventions chosen and re-form the table with these appended
-  flip flip[t],n!(,/)(bulkfnc[fncs])@/:\:t c}
+  flip flip[t],n!(,/)(prep.i.bulkfnc[fncs])@/:\:t c}
 
 // Perform a truncated single value decomposition on unique linear combinations of float columns
 // https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html
