@@ -11,7 +11,6 @@
 prep.freshcreate:{[t;p]
   t:(`$ssr[;"_";""]each string cols t)xcol t;
   agg:p`aggcols;prm:get p`params;
-  t:(`$ssr[;"_";""]each string cols t)xcol t;
   // Feature extraction should be performed on all columns that are non aggregate
   cols2use:k where not (k:cols[t])in agg;
   fe_start:.z.T;

@@ -174,6 +174,7 @@ i.normalproc:{[t;p]
   t:prep.i.symencode[t;10;0;p;p`symencode];
   t:prep.i.nullencode[t;med];
   t:.ml.infreplace[t];
+  t:(`$ssr[;"_";""]each string cols t)xcol t;
   // Create the table needed to extract features on a column/function basis
   normtab:i.normecols[;cols t]each p[`features];
   // Names of all the columns which truncated singular value decomposition is applied
@@ -190,7 +191,7 @@ i.normalproc:{[t;p]
 
 // Apply feature creation and encoding procedures for FRESH on new data
 /. r > table with feature creation and encodings applied appropriately
-i.freshproc:{[t;p]
+i.freshproc:{[t;p] 
   t:prep.i.autotype[t;p`typ;p];
   agg:p`aggcols;
   // Apply symbol encoding based on a previous run of automl
@@ -202,9 +203,8 @@ i.freshproc:{[t;p]
   // Modified fresh feature creation for column by column extraction
   fproc:{[x;y;z;r].ml.fresh.createfeatures[x;y;z;`f xkey flip r]};
   // Feature creation applied on appropriate columns
-  t:value agg xkey p[`features]xcols 0!(uj/)fproc[t;agg]'[(0!appfncs)`coln;value appfncs];
-  t:prep.i.nullencode[t;med];
-  t:.ml.infreplace t;
+  t:prep.i.nullencode[0!(uj/)fproc[t;agg]'[(0!appfncs)`coln;value appfncs];med];
+  t:value agg xkey p[`features]xcols .ml.infreplace t;
   // It is not guaranteed that new feature creation will produce the all requisite features 
   // if this is not the case dummy features are added to the data, column reordering may be
   // required in some circumstances.
