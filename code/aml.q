@@ -26,11 +26,12 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // This provides an encoding map which can be used in reruns of automl even
   // if the data is no longer in the appropriate format for symbol encoding
   encoding:prep.i.symencode[tb;10;1;dict;::];
-  tb:preproc[tb;tgt;ftype;dict];-1 i.runout`pre;
-  tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
-       ftype=`normal;prep.normalcreate[tb;dict];
-       '`$"Feature extraction type is not currently supported"];
-  feats:prep.freshsignificance[tb 0;tgt];
+  tb:$[ftype=`nlpclass;(tb;0);
+      [preproc[tb;tgt;ftype;dict];-1 i.runout`pre;
+        tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
+        ftype=`normal;prep.normalcreate[tb;dict];
+       '`$"Feature extraction type is not currently supported"]]];
+  feats:$[ftype=`nlpclass;cols tb 0;prep.freshsignificance[tb 0;tgt]];
   // Encode target data if target is a symbol vector
   if[11h~type tgt;tgt:.ml.labelencode tgt];
   // Apply the appropriate train/test split to the data

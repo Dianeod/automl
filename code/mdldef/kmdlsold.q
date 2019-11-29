@@ -39,28 +39,3 @@ regfitscore:{
  m[`:compile][`optimizer pykw"rmsprop";`loss pykw"mse"];
  m[`:fit][npa x[0]0;x[0]1;`batch_size pykw 32;`verbose pykw 0];
  raze m[`:predict][npa x[1]0]`}
- 
-nlpmulticlassfitscore:{
- classmod:.p.import[`simpletransformers.classification]`:ClassificationModel;
- pdD:.p.import[`pandas]`:DataFrame;
- args:`overwrite_output_dir`use_multiprocessing!(10b);
- args:`output_dir!p`model_path;
- args,:y`args;
- model:classmod[y`model_type;y`model_name;`use_cuda pykw 0b;`args pykw args];
- model[`:train_model][pdD ((x[0]0),'x[0]1)];
- evals:model[`:eval_model][pdD x[1]0;(y`scf) pykw get[y`scf]]`;
- (first evals)y`scf
- }
-
-nlpmultilabelfitscore:{
- classmod:.p.import[`simpletransformers.classification]`:MultiLabelClassificationModel;
- pdD:.p.import[`pandas]`:DataFrame;
- args:`overwrite_output_dir`use_multiprocessing!(10b);
- args:`output_dir!p`model_path;
- args,:y`args;
- model:classmod[y`model_type; y`model_name;`use_cuda pykw 0b;`args pykw args];
- model[`:train_model][pdD (enlist each x[0]0),'enlist each x[0]1];
- evals:model[`:eval_model][pdD x[1]0;(y`scf) pykw get[y`scf]]`;
- (first evals)y`scf
- }
-

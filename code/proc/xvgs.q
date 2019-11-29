@@ -17,7 +17,8 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
   s:$[ms:mdls[`seed]~`seed;
       $[sk;enlist[`random_state]!enlist p`seed;p`seed];
       ::];
-  $[ms&sk;
+  $[`nlpclass~p`typ;(mdls`minit)[((xtrn;ytrn);p)];
+    ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
     // and the model is from sklearn, this is in order to incorporate the random state definition
     // Final parameter required as dict to allow for grid search to be as flexible as possible

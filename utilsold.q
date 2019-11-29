@@ -38,17 +38,6 @@ i.updparam:{[t;p;typ]
 	   '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
 	   d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
-      typ=`nlpclass;
-       {[t;p]d:i.nlpclassdefault[];
-       d:$[(ty:type p)in 10 -11 99h;
-           [if[10h~ty;p:.aml.i.getdict p];
-            if[-11h~ty;p:.aml.i.getdict$[":"~first p;1_;]p:string p];
-            $[min key[p]in key d;d,p;
-              '`$"You can only pass appropriate keys to normal"]];
-           p~(::);d;
-           '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
-              " or a dictionary with appropriate key/value pairs"];
-           d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
       typ=`tseries;
       '`$"This will need to be added once the time-series recipe is in place";
     '`$"Incorrect input type"]}
@@ -83,9 +72,6 @@ i.freshdefault:{`aggcols`params`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
 i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
-i.nlpclassdefault:{`model_type`model_name`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
-  (`bert;"berts-base-uncased";();(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
 
 // Apply an appropriate scoring function to predictions from a model
 /* xtst = test data
@@ -108,8 +94,6 @@ i.savemdl:{[bmn;bmo;mdls;nms]
       (joblib[`:dump][bmo;fname,"/",string[bmn]];-1"Saving down ",string[bmn]," model to ",mo);
     (`keras=?[mdls;enlist(=;`model;bmn,());();`lib])0;
       (bmo[`:save][fname,"/",string[bmn],".h5"];-1"Saving down ",string[bmn]," model to ",mo);
-    (`simpletransformers=?[mdls;enlist(=;`model;bmn,());();`lib])0;
-      ;-1"Saving down ",string[bmn]," model to ",mo);
    -1"Saving of non keras/sklearn models types is not currently supported"];
  }
 
@@ -124,10 +108,7 @@ i.models:{[ptyp;tgt;p]
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
   if[ptyp=`class;
     // For classification tasks remove inappropriate classification models
-    m:$[`nlpclass~p`typ;[$[1~count tgt[0]
-        select from m where model=`NLPmultiClass;
-        select from m where model=`NLPmultiLabel]];
-        2<count distinct tgt;
+    m:$[2<count distinct tgt;
         delete from m where typ=`binary;
         delete from m where model=`MultiKeras]];
   // Add a column with appropriate initialized models for each row
@@ -313,10 +294,3 @@ i.ssrwin:{[path]$[.z.o like "w*";ssr[path;"/";"\\"];path]}
 // data can make use of functions that speed up execution of feature extraction
 /. r > table with columns renamed appropriately
 i.rmvunder:{[t](`$ssr[;"_";""]each string cols t) xcol t}
- 
-i.precision_microavg:{.ml.precision[raze x;raze y;1b]}
-i.sensitivity_microavg:{.ml.sensitivity[raze x;raze y;1b]}
-
-i.macroavg:{(sum z[;;1b]'[flip x;flip y])%count first x}
-i.precision_macroavg:{i.macroavg[x;y;.ml.precision]}
-i.sensitivity_macroavg:{i.macroavg[x;y;.ml.sensitivity]}

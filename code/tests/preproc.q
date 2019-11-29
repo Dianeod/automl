@@ -44,4 +44,4 @@ prep.i.describe[sym_tab_f_o] ~ (`x2`x3`x`x1)!flip desc_columns!desc_values_1
 // Bulk transformation functionality
 bulk_columns:`x`x1`x2`x3`xx1_multi`xx1_sum`xx1_div`xx1_sub
 bulk_values:(til 5;desc til 5;3 2 1 2 3f;"t"$til 5;0 3 4 3 0;5#4;"f"$(0w;1;0.5;1%3;0.25);(4;2;0;neg[2];neg[4]))
-prep.i.bulktransform[bulk_tab;::;keys bulkname;1b] ~ flip bulk_columns!bulk_values 
+prep.i.bulktransform[bulk_tab;::;keys prep.i.bulkname;1b] ~ flip bulk_columns!bulk_values 

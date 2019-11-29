@@ -40,7 +40,7 @@ prep.normalcreate:{[t;p]
   tcols:.ml.i.fndcols[t;"dmntvupz"];
   tb:(cols[t]except tcols)#t;
   tb:prep.i.truncsvd[tb;::;2];
-  tb:prep.i.bulktransform[tb;::;key bulkname;1b];
+  tb:prep.i.bulktransform[tb;::;key prep.i.bulkname;1b];
   tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
   // Apply the transform of time specific columns as appropriate
   if[0<count tcols;tb^:.ml.timesplit[tcols#t;::]];
