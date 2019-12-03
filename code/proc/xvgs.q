@@ -15,18 +15,15 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
   // Add a random state to a model if denoted by the flat file definition of the models
   // this needs to be handled differently for sklearn and keras models
   s:$[ms:mdls[`seed]~`seed;
-      $[sk;enlist[`random_state]!enlist p`seed;p`seed];
-      ::];
-  $[`nlpclass~p`typ;[shuffidx:.ml.xv.i.shuffle xtrn;
-    (mdls`minit)[((xtrn[(idxs)_shuffidx];ytrn[(idxs)_shuffidx]);(xtrn[idxs#shuffidx];ytrn[(idxs:ceiling 0.2*count shuffidx)#shuffidx]));p]];
-    ms&sk;
+      $[sk;enlist[`random_state]!enlist p`seed;(p[`seed],mdls[`typ])];
+      (p,mdls[`typ])];
+    $[ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
-    // and the model is from sklearn, this is in order to incorporate the random state definition
-    // Final parameter required as dict to allow for grid search to be as flexible as possible
+    // and the model is from sklearn, this is in order to incorporate the random state definition.
+    // Final parameter upd was required as dict for grid search to be as flexible as possible
     first value get[p[`gs]0][p[`gs]1;1;xtrn;ytrn;p[`prf]mdls`minit;s;enlist[`val]!enlist 0];
-    // Otherwise a base level cross validation is performed
-    get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]];
-   }
+    // Otherwise a vanilla cross validation is performed
+    get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]]}
 
 
 // Grid search over the set of all hyperparameters outlined in code/mdldef/hyperparams.txt
@@ -62,7 +59,7 @@ proc.gs.psearch:{[xtrn;ytrn;xtst;ytst;bm;p;typ;mdls]
   // Extract the best hyperparameter set based on scoring function 
   hyp:first key first gsprms;
   bmdl:epymdl[pykwargs hyp][`:fit][xtrn;ytrn];
-  score:fn[;ytst]bmdl[`:predict][flip value flip xtst]`;
+  score:fn[;ytst]bmdl[`:predict][xtst]`;
   (score;hyp;bmdl)
   }
 
@@ -76,7 +73,8 @@ proc.gs.psearch:{[xtrn;ytrn;xtst;ytst;bm;p;typ;mdls]
 /*      within the cross-validation/grid search procedures from the xtrain and ytrain data supplied
 
 /. r > The value predicted on the validation set and the true value
-xv.fitpredict:{[f;hp;d]($[-7h~type hp;f[d;hp];@[.[f[][hp]`:fit;d 0]`:predict;d[1]0]`];d[1]1)}
+xv.fitpredict:{[f;hp;d]($[0h~type hp;f[d;hp[0];hp[1]];@[.[f[][hp]`:fit;d 0]`:predict;d[1]0]`];d[1]1)}
+
 
 /* fn = The scoring function which is to be used for evaluating the performance of the grid search
 /. r  > The score achieved for each cross validation set based on the user defined scoring function
