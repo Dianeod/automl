@@ -9,5 +9,5 @@ SVC                        | sklearn           	;   svm                      ; s
 LinearSVC                  | sklearn           	;   svm                      ; seed ; binary
 BinaryKeras                | keras             	;   binfitscore              ; seed ; binary
 MultiKeras                 | keras             	;   multifitscore            ; seed ; multi
-NLPmultiClass		   | simpletransformers ;   nlpmulticlassfitscore    ; dict ; multi
-NLPmultiLabel              | simpletransformers ;   nlpmultilabelfitscore    ; dict ; multi
+NLPmultiClass		   | simpletransformers ;   nlpmulticlassfitscore    ; dict ; nlpmulticlass
+NLPmultiLabel              | simpletransformers ;   nlpmultilabelfitscore    ; dict ; nlpmultilabel
