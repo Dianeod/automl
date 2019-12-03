@@ -18,7 +18,8 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
-  if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
+  if[sopt:dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
+  if[sopt&ftype~`nlpclass;[system"mkdir -p ",spath:1_-8_last spaths`config;dict[`spath]:spath]];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -49,11 +50,12 @@ runexample:{[tb;tgt;ftype;ptype;p]
   if[a:bm[1]in i.excludelist;
     -1 i.runout`ex;score:i.scorepred[flip value flip tts`xtest;tts`ytest;last bm;fn];expmdl:last bm];
   // Run grid search on the best model for the parameter sets defined in hyperparams.txt
-  if[b:not a;
+  if[(not ftype~`nlpclass)&b:not a;
     -1 i.runout`gs;
     prms:proc.gs.psearch[flip value flip tts`xtrain;tts`ytrain;
                          tts`xtest;tts`ytest;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
+  if[ftype~`nlpclass];
   -1 i.runout[`sco],string[score],"\n";
   // Save down a pdf report summarizing the running of the pipeline
   if[2=dict`saveopt;

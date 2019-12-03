@@ -84,7 +84,7 @@ i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
 i.nlpclassdefault:{`model_type`model_name`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
-  (`bert;"berts-base-uncased";();(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
+  (`bert;"bert-base-uncased";();(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
 
 // Apply an appropriate scoring function to predictions from a model
@@ -109,7 +109,7 @@ i.savemdl:{[bmn;bmo;mdls;nms]
     (`keras=?[mdls;enlist(=;`model;bmn,());();`lib])0;
       (bmo[`:save][fname,"/",string[bmn],".h5"];-1"Saving down ",string[bmn]," model to ",mo);
     (`simpletransformers=?[mdls;enlist(=;`model;bmn,());();`lib])0;
-      ;-1"Saving down ",string[bmn]," model to ",mo);
+      -1"Saving down ",string[bmn]," model to ",mo;
    -1"Saving of non keras/sklearn models types is not currently supported"];
  }
 
@@ -124,7 +124,7 @@ i.models:{[ptyp;tgt;p]
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
   if[ptyp=`class;
     // For classification tasks remove inappropriate classification models
-    m:$[`nlpclass~p`typ;[$[1~count tgt[0]
+    m:$[`nlpclass~p`typ;[$[1~count tgt[0];
         select from m where model=`NLPmultiClass;
         select from m where model=`NLPmultiLabel]];
         2<count distinct tgt;

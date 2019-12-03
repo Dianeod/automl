@@ -17,14 +17,16 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
   s:$[ms:mdls[`seed]~`seed;
       $[sk;enlist[`random_state]!enlist p`seed;p`seed];
       ::];
-  $[`nlpclass~p`typ;(mdls`minit)[((xtrn;ytrn);p)];
+  $[`nlpclass~p`typ;[shuffidx:.ml.xv.i.shuffle xtrn;
+    (mdls`minit)[((xtrn[(idxs)_shuffidx];ytrn[(idxs)_shuffidx]);(xtrn[idxs#shuffidx];ytrn[(idxs:ceiling 0.2*count shuffidx)#shuffidx]));p]];
     ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
     // and the model is from sklearn, this is in order to incorporate the random state definition
     // Final parameter required as dict to allow for grid search to be as flexible as possible
     first value get[p[`gs]0][p[`gs]1;1;xtrn;ytrn;p[`prf]mdls`minit;s;enlist[`val]!enlist 0];
     // Otherwise a base level cross validation is performed
-    get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]]}
+    get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]];
+   }
 
 
 // Grid search over the set of all hyperparameters outlined in code/mdldef/hyperparams.txt

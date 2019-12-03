@@ -14,11 +14,13 @@
 preproc:{[t;tgt;typ;p]
   prep.i.lencheck[t;tgt;typ;p];
   show prep.i.describe t;
-  tb:prep.i.symencode[t;10;0;p;::];
+  t:prep.i.symencode[t;10;0;p;::];
   // For FRESH the aggregate columns need to be excluded from the preprocessing
   // steps, this ensures that encoding is not performed on the aggregate columns
   // if this is a symbol and or if this column is constant in the case of new data
-  if[`fresh=typ;[sepdata:(p[`aggcols],())#flip tb;tb:flip (cols[tb]except p[`aggcols])#flip tb]];
+  $[`fresh=typ;
+    [sepdata:(p[`aggcols],())#flip t;tb:flip (cols[t]except p[`aggcols])#flip t];
+    tb:t];
   tb:.ml.dropconstant tb;
   tb:prep.i.nullencode[tb;med];
   // perform an infinity replace and rejoin the separated aggregate columns for FRESH

@@ -11,4 +11,3 @@ BinaryKeras                | keras             	;   binfitscore              ; s
 MultiKeras                 | keras             	;   multifitscore            ; seed ; multi
 NLPmultiClass		   | simpletransformers ;   nlpmulticlassfitscore    ; dict ; multi
 NLPmultiLabel              | simpletransformers ;   nlpmultilabelfitscore    ; dict ; multi
-
