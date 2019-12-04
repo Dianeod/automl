@@ -7,7 +7,7 @@ KNeighborsClassifier       | sklearn   	       	;   neighbors                ; :
 MLPClassifier              | sklearn           	;   neural_network           ; seed ; multi
 SVC                        | sklearn           	;   svm                      ; seed ; binary
 LinearSVC                  | sklearn           	;   svm                      ; seed ; binary
-BinaryKeras                | keras             	;   binfitscore              ; seed ; binary
-MultiKeras                 | keras             	;   multifitscore            ; seed ; multi
-NLPmultiClass		   | simpletransformers ;   nlpmulticlassfitscore    ; dict ; nlpmulticlass
-NLPmultiLabel              | simpletransformers ;   nlpmultilabelfitscore    ; dict ; nlpmultilabel
+BinaryKeras                | keras             	;   binary                   ; seed ; binary
+MultiKeras                 | keras             	;   multi                    ; seed ; multi
+NLPmultiClass		   | simpletransformers ;   nlp                      ; dict ; nlpmulticlass
+NLPmultiLabel              | simpletransformers ;   nlp                      ; dict ; nlpmultilabel

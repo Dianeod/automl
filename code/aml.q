@@ -15,6 +15,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
   if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
+  if[`nlpclass~ftype;dict[`tgtnum]:2|count tgt[1]];
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
@@ -44,7 +45,6 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // repetition of this task which can be computationally expensive
   xtrn:flip value flip tts`xtrain;xtst:flip value flip tts`xtest;
   ytrn:tts`ytrain;ytst:tts`ytest;
-
   mdls:i.kerascheck[mdls;tts;tgt];
   // Check if Tensorflow/Keras not available for use, NN models removed
   if[1~checkimport[];mdls:?[mdls;enlist(<>;`lib;enlist `keras);0b;()]];
@@ -55,10 +55,10 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // Do not run grid search on deterministic models returning score on the test set and model
   if[a:bm[1]in i.excludelist;
     data:(xtrn;ytrn;xtst;ytst);
-    funcnm:neg[8]_string first exec fnc from mdls where model=bm[1];
+    funcnm:string first exec fnc from mdls where model=bm[1];
     -1 i.runout`ex;score:i.scorepred[data;bm[1];expmdl:last bm;fn;funcnm]];
   // Run grid search on the best model for the parameter sets defined in hyperparams.txt
-  if[(not ftype~`nlpclass)&b:not a;
+  if[b:not a;
     -1 i.runout`gs;
     prms:proc.gs.psearch[xtrn;ytrn;xtst;ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
@@ -96,6 +96,7 @@ newproc:{[t;fp]
     i.normalproc[t;metadata];
     `fresh=typ;
     i.freshproc[t;metadata];
+    `nlpclass~typ;t;
     '`$"This form of operation is not currently supported"
     ];
   $[(mp:metadata[`pylib])in `sklearn`keras;
@@ -106,6 +107,9 @@ newproc:{[t;fp]
      $[bool;
        [fnm:neg[5]_string lower mdl;get[".aml.",fnm,"predict"][(0n;(data;0n));model]];
        model[`:predict;<]data]];
+     (mp:metadata[`pylib])~`simpletransformers;[
+     model:nlpmdl[metadata;`$lower string metadata`best_model];
+     first model[`:predict;<]raze flip value flip data];
     '`$"The current model type you are attempting to apply is not currently supported"]
   }
 

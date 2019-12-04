@@ -83,9 +83,9 @@ i.freshdefault:{`aggcols`params`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
 i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
-i.nlpclassdefault:{`model_type`model_name`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
-  (`bert;"bert-base-uncased";();(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
+i.nlpclassdefault:{`model_type`model_name`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum!
+  (`bert;"bert-base-uncased";();(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`multiclass`multilabel!(`.ml.accuracy;`.aml.i.precision_microavg);
+   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2)}
 
 // Apply an appropriate scoring function to predictions from a model
 /* xtst = test data
@@ -96,7 +96,7 @@ i.nlpclassdefault:{`model_type`model_name`args`xv`gs`prf`scf`seed`saveopt`hld`tt
 /* fnm  = name of the base representation of the function to be applied (reg/multi/bin)
 /. r    > score for the model based on the predictions on test data
 i.scorepred:{[data;bmn;mdl;scf;fnm]
-  pred:$[bmn in i.keraslist;
+  pred:$[bmn in `NLPmultiClass`NLPmultiLabel,i.keraslist;
          // Formatting of first param is a result of previous implementation choices
          get[".aml.",fnm,"predict"][(0n;(data 2;0n));mdl];
          mdl[`:predict][data 2]`];
@@ -136,8 +136,8 @@ i.models:{[ptyp;tgt;p]
         select from m where model=`NLPmultiClass;
         select from m where model=`NLPmultiLabel]];
         2<count distinct tgt;
-        delete from m where typ=`binary;
-        delete from m where model=`MultiKeras]];
+        delete from m where typ in `binary`NLPmultiClass`NLPmultiLabel;
+        delete from m where model in `MultiKeras`NLPmultiClass`NLPmultiLabel]];
   // Add a column with appropriate initialized models for each row
   m:update minit:.aml.proc.i.mdlfunc .'flip(lib;fnc;model)from m;
   // Threshold models used based on unique target values
@@ -154,8 +154,8 @@ i.updmodels:{[mdls;tgt]
 // These are a list of models which are deterministic and thus which do not need to be grid-searched 
 // at present this should include the Keras models as a sufficient tuning method
 // has yet to be implemented
-i.keraslist:`RegKeras`MultiKeras`BinKeras
-i.excludelist:i.keraslist,`GaussianNB`LinearRegression;
+i.keraslist:`RegKeras`MultiKeras`BinaryKeras
+i.excludelist:i.keraslist,`GaussianNB`LinearRegression`NLPmultiClass`NLPmultiLabel;
 
 // Dictionary with mappings for console printing to reduce clutter in .aml.runexample
 i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save!
@@ -306,7 +306,8 @@ i.errtgt:{[mdls]
 
 // Extract the scoring function to be applied for model selection
 /. r    > the scoring function appropriate to the problem being solved
-i.scfn:{[p;mdls]p[`scf]$[`reg in distinct mdls`typ;`reg;`class]}
+i.scfn:{[p;mdls]p[`scf]$[`nlp in distinct mdls`fnc;`$(3_string first mdls`typ);
+        `reg in distinct mdls`typ;`reg;`class]}
 
 // Check if MultiKeras model is to be applied and each target exists in both training and testing sets
 /* tts  = train-test split dataset
