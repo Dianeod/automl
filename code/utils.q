@@ -38,7 +38,7 @@ i.updparam:{[t;p;typ]
 	   '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
 	   d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
-      typ=`nlpclass;
+      typ=`nlp;
        {[t;p]d:i.nlpclassdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.aml.i.getdict p];
@@ -83,9 +83,9 @@ i.freshdefault:{`aggcols`params`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
 i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
-i.nlpclassdefault:{`model_type`model_name`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum!
-  (`bert;"bert-base-uncased";();(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`multiclass`multilabel!(`.ml.accuracy;`.aml.i.precision_microavg);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2)}
+i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp!
+  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.xv.fitpredict;`multiclass`multilabel!(`.ml.accuracy;`.aml.i.multiaccuracy);
+   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass)}
 
 // Apply an appropriate scoring function to predictions from a model
 /* xtst = test data
@@ -96,7 +96,7 @@ i.nlpclassdefault:{`model_type`model_name`args`xv`gs`prf`scf`seed`saveopt`hld`tt
 /* fnm  = name of the base representation of the function to be applied (reg/multi/bin)
 /. r    > score for the model based on the predictions on test data
 i.scorepred:{[data;bmn;mdl;scf;fnm]
-  pred:$[bmn in `NLPmultiClass`NLPmultiLabel,i.keraslist;
+  pred:$[bmn in i.nlplist,i.keraslist;
          // Formatting of first param is a result of previous implementation choices
          get[".aml.",fnm,"predict"][(0n;(data 2;0n));mdl];
          mdl[`:predict][data 2]`];
@@ -130,14 +130,11 @@ i.models:{[ptyp;tgt;p]
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
-  if[ptyp=`class;
+  if[ptyp in `class;
     // For classification tasks remove inappropriate classification models
-    m:$[`nlpclass~p`typ;[$[1~count tgt[0];
-        select from m where model=`NLPmultiClass;
-        select from m where model=`NLPmultiLabel]];
-        2<count distinct tgt;
-        delete from m where typ in `binary`NLPmultiClass`NLPmultiLabel;
-        delete from m where model in `MultiKeras`NLPmultiClass`NLPmultiLabel]];
+    m:$[2<count distinct tgt;
+        delete from m where typ in `binary`nlp;
+        delete from m where model in `MultiKeras]];
   // Add a column with appropriate initialized models for each row
   m:update minit:.aml.proc.i.mdlfunc .'flip(lib;fnc;model)from m;
   // Threshold models used based on unique target values
@@ -155,7 +152,8 @@ i.updmodels:{[mdls;tgt]
 // at present this should include the Keras models as a sufficient tuning method
 // has yet to be implemented
 i.keraslist:`RegKeras`MultiKeras`BinaryKeras
-i.excludelist:i.keraslist,`GaussianNB`LinearRegression`NLPmultiClass`NLPmultiLabel;
+i.nlplist:`Bert`RoBERTa`XLNet`XLM`DistilBERT`ALBERT`CamenBERT
+i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression;
 
 // Dictionary with mappings for console printing to reduce clutter in .aml.runexample
 i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save!
@@ -306,7 +304,7 @@ i.errtgt:{[mdls]
 
 // Extract the scoring function to be applied for model selection
 /. r    > the scoring function appropriate to the problem being solved
-i.scfn:{[p;mdls]p[`scf]$[`nlp in distinct mdls`fnc;`$(3_string first mdls`typ);
+i.scfn:{[p;mdls]p[`scf]$[`nlp in distinct mdls`fnc;p`ptyp;
         `reg in distinct mdls`typ;`reg;`class]}
 
 // Check if MultiKeras model is to be applied and each target exists in both training and testing sets
@@ -333,3 +331,4 @@ i.sensitivity_microavg:{.ml.sensitivity[raze x;raze y;1b]}
 i.macroavg:{(sum z[;;1b]'[flip x;flip y])%count first x}
 i.precision_macroavg:{i.macroavg[x;y;.ml.precision]}
 i.sensitivity_macroavg:{i.macroavg[x;y;.ml.sensitivity]}
+i.multiaccuracy:{avg .ml.accuracy[x;y]}

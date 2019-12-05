@@ -25,7 +25,7 @@ prep.i.autotype:{[t;typ;p]
       // restore the aggregating columns 
       tb:flip (l!t l,:()),cls!t cls;
       prep.i.errcol[cols t;cols tb;typ]];
-    typ~`nlpclass;tb:t;
+    typ~`nlp;tb:t;
     '`$"This form of feature extraction is not currently supported"];
   tb}
 

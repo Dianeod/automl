@@ -8,7 +8,7 @@
 // Utilities for proc.q
 
 // Text files that can be parsed from within the mdldef folder
-proc.i.files:`class`reg`score!("classmodels.txt";"regmodels.txt";"scoring.txt")
+proc.i.files:`class`reg`score`multilabel`multiclass!("classmodels.txt";"regmodels.txt";"scoring.txt";"nlpmodels.txt";"nlpmodels.txt")
 
 // Build up the model to be applied based on naming convention
 /* lib = library which forms the basis for the definition

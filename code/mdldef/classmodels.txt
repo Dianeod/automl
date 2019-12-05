@@ -9,5 +9,3 @@ SVC                        | sklearn           	;   svm                      ; s
 LinearSVC                  | sklearn           	;   svm                      ; seed ; binary
 BinaryKeras                | keras             	;   binary                   ; seed ; binary
 MultiKeras                 | keras             	;   multi                    ; seed ; multi
-NLPmultiClass		   | simpletransformers ;   nlp                      ; dict ; nlpmulticlass
-NLPmultiLabel              | simpletransformers ;   nlp                      ; dict ; nlpmultilabel

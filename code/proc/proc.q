@@ -36,9 +36,9 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
      kermdl:mdl[data;p`seed;`$funcnm];
      bm:fit[data;kermdl];
      s2:scf[;ytst]get[".aml.",funcnm,"predict"][data;bm]];
-     bs in `NLPmultiClass`NLPmultiLabel;
+     bs in i.nlplist;
      [data:((xtrn;ytrn);(xtst;ytst));
-     kermdl:nlpmdl[p;first mdls`typ];
+     kermdl:nlpmdl[p;first mdls`model];
      bm:nlpfit[data;kermdl];
      s2:scf[;ytst]nlppredict[data;bm]];
     [bm:(first exec minit from mdls where model=bs)[][];

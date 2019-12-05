@@ -15,12 +15,12 @@ runexample:{[tb;tgt;ftype;ptype;p]
   if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
-  if[`nlpclass~ftype;dict[`tgtnum]:2|count tgt[1]];
+  if[`nlp~ftype;dict[`tgtnum`ptyp]:(2|count tgt[1];ptype)];
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[sopt:dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[sopt&ftype~`nlpclass;[system"mkdir -p ",spath:1_-8_last spaths`config;dict[`spath]:spath]];
+  if[sopt&ftype~`nlp;dict[`spath]:1_-8_last spaths`config];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -28,12 +28,12 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // This provides an encoding map which can be used in reruns of automl even
   // if the data is no longer in the appropriate format for symbol encoding
   encoding:prep.i.symencode[tb;10;1;dict;::];
-  tb:$[ftype=`nlpclass;(tb;0);
+  tb:$[ftype=`nlp;(tb;0);
       [preproc[tb;tgt;ftype;dict];-1 i.runout`pre;
         tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
         ftype=`normal;prep.normalcreate[tb;dict];
        '`$"Feature extraction type is not currently supported"]]];
-  feats:$[ftype=`nlpclass;cols tb 0;prep.freshsignificance[tb 0;tgt]];
+  feats:$[ftype=`nlp;cols tb 0;prep.freshsignificance[tb 0;tgt]];
   // Encode target data if target is a symbol vector
   if[11h~type tgt;tgt:.ml.labelencode tgt];
 
@@ -62,7 +62,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
     -1 i.runout`gs;
     prms:proc.gs.psearch[xtrn;ytrn;xtst;ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
-  if[ftype~`nlpclass];
+  if[ftype~`nlp];
   -1 i.runout[`sco],string[score],"\n";
   // Save down a pdf report summarizing the running of the pipeline
   if[2=dict`saveopt;
@@ -96,7 +96,7 @@ newproc:{[t;fp]
     i.normalproc[t;metadata];
     `fresh=typ;
     i.freshproc[t;metadata];
-    `nlpclass~typ;t;
+    `nlp~typ;t;
     '`$"This form of operation is not currently supported"
     ];
   $[(mp:metadata[`pylib])in `sklearn`keras;
@@ -108,7 +108,7 @@ newproc:{[t;fp]
        [fnm:neg[5]_string lower mdl;get[".aml.",fnm,"predict"][(0n;(data;0n));model]];
        model[`:predict;<]data]];
      (mp:metadata[`pylib])~`simpletransformers;[
-     model:nlpmdl[metadata;`$lower string metadata`best_model];
+     model:nlpmdl[metadata;metadata`best_model];
      first model[`:predict;<]raze flip value flip data];
     '`$"The current model type you are attempting to apply is not currently supported"]
   }

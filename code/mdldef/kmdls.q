@@ -12,28 +12,38 @@ fitscore:{[d;s;mtype]
   m:fit[d;m];
   get[".aml.",string[mtype],"predict"][d;m]}
 
-nlpfitscore:{[d;dict;mtype]
- m:nlpmdl[dict;mtype];
+nlpfitscore:{[d;dict;mdl]
+ m:nlpmdl[dict;mdl];
  m:nlpfit[d;m];
  nlppredict[d;m]}
 
 actdict:`binary`reg`multi!("sigmoid";"relu";"softmax")
 lossdict:`binary`reg`multi!("binary_crossentropy";"mse";"categorical_crossentropy")
 
-mdl:{[s;mtype]
+nlpdict:(!). flip(
+ (`Bert;         "bert-base-uncased");
+ (`RoBERTa;      "roberta-base");
+ (`XLNet;        "xlnet-base-cased");
+ (`XLM ;         "xlm-mlm-en-2048");
+ (`DistilBERT;   "distilbert-base-uncased-distilled-squad");
+ (`ALBERT  ;     "albert-base-v1");
+ (`CamemBERT;    "camembert-base"))
+
+mdl:{[d;s;mtype]
  m:seq[];
  nps[s];
  m[`:add]dns[32;`activation pykw"relu";`input_dim pykw count first d[0]0];
  m[`:add]dns[$[mtype~`multi;count distinct (d[0]1)`;1];`activation pykw actdict[mtype]];
  m[`:compile][`loss pykw lossdict[mtype];`optimizer pykw "rmsprop"];m}
 
-nlpmdl:{[dict;mtyp]
- args:`overwrite_output_dir`use_multiprocessing`output_dir`silent!(1b;0b;dict`spath;1b);
+nlpmdl:{[dict;mdl]
+ args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;(dict`spath),"/nlpmodel";path,"/outputs/cache_dir";1b;1b);
  args,:dict`args;
+ if[not `cache_dir in key hsym `$path,"/outputs";system "mkdir -p ",path,"/outputs/cache_dir"];
  pydict:`model_type`model_name`use_cuda`args!
-        (dict`model_type;dict`model_name;0b;args);
- if[mtyp~`nlpmultilabel;pydict[`num_labels]:dict`tgtnum];
- m:get[".aml.",string[mtyp]][pykwargs pydict];m}
+        (lower mdl;nlpdict[mdl];0b;args);
+ if[dict[`ptyp]~`multilabel;pydict[`num_labels]:dict`tgtnum];
+ m:get[".aml.nlp",string[dict`ptyp]][pykwargs pydict];m}
 
 fit:{[d;m]m[`:fit][npa d[0]0;d[0]1;`batch_size pykw 32;`verbose pykw 0];m}
 
@@ -47,7 +57,7 @@ binarypredict  :{[d;m].5<raze m[`:predict][npa d[1]0]`}
 multipredict:{[d;m]m[`:predict_classes][npa d[1]0]`}
 regpredict  :{[d;m]raze m[`:predict][npa d[1]0]`}
 
-nlppredict  :{[d;m]first m[`:predict][raze d[1]0]`}
+nlppredict  :{[d;m]first m[`:predict][$[0h~type d[1]0;raze;] d[1]0]`}
 
 npa:.p.import[`numpy]`:array;
 seq:.p.import[`keras.models]`:Sequential;
@@ -56,3 +66,5 @@ nps:.p.import[`numpy.random][`:seed];
 pdD:.p.import[`pandas]`:DataFrame;
 nlpmulticlass:.p.import[`simpletransformers.classification]`:ClassificationModel;
 nlpmultilabel:.p.import[`simpletransformers.classification]`:MultiLabelClassificationModel;
+
+/if[0>system"s";.ml.mproc.init[abs system"s"]("\\l ",path,"/automl.q";"\\l ",path,"/code/")]

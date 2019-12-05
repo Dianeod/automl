@@ -16,7 +16,7 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
   // this needs to be handled differently for sklearn and keras models
   s:$[ms:mdls[`seed]~`seed;
       $[sk;enlist[`random_state]!enlist p`seed;(p[`seed],mdls[`typ])];
-      `nlpclass~p`typ;(p;mdls[`typ]);::];
+      `nlp~p`typ;(p;mdls[`model]);::];
     $[ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
     // and the model is from sklearn, this is in order to incorporate the random state definition.
