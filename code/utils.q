@@ -318,9 +318,9 @@ i.separ:{"_" vs string x}
 /* svo = save option defined by the user, this can only be 1/2 in this case
 /. r   > the file paths in its full format or truncated for use in outputs to terminal
 i.pathconstruct:{[dt;svo]
-  names:`config`models;
+  names:$[svo=4;`norm`nlp;`config`models];
   if[svo in 2 3;names:names,`images`report]
-  pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",y,"/";":";"."]};
+  pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",$[not 10h~0N!type x[`pt];y;x[`pt],"/",y],"/";":";"."]};
   paths:path,/:pname[dt]each string names;
   paths:i.ssrwin[paths];
   {[fnm]system"mkdir",$[.z.o like "w*";" ";" -p "],fnm}each paths;

@@ -11,7 +11,8 @@
 /* p     = parameters (::) produces default other changes are user dependent
 
 runexample:{[tb;tgt;ftype;ptype;p]
-  dtdict:`stdate`sttime!$[0N~p`spath;(.z.D;.z.T);(`$-17_8_p`spath;`$23_p`spath)];
+  dtdict:`stdate`sttime!$[0N~p`spath;(.z.D;.z.T);(`$-17_p`spath;`$15_p`spath)];
+  if[3=p`saveopt;dtdict:dtdict,enlist[`pt]!enlist$[ftype~`normal;"norm";"nlp"]];
   if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
@@ -84,10 +85,12 @@ runexample:{[tb;tgt;ftype;ptype;p]
   }
 
 runexamplenlp:{[tb;tgt;ftype;ptype;p]
+  dtdict:`stdate`sttime!(.z.D;.z.T);
+  spath:i.pathconstruct[dtdict;4];
   strt:.ml.i.fndcols[tb;"C"];
-  runstr:runexample[strtb:?[tb;();0b;strt!strt];tgt;ftype;`multiclass;`saveopt`seed!(3;1234)];
+  runstr:runexample[strtb:?[tb;();0b;strt!strt];tgt;ftype;`multiclass;`saveopt`seed`spath!(3;1234;sp:9_-5_last spath`nlp)];
   if[count[strt]<count cols tb;
-  runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;`saveopt`seed`spath!(3;1234;(runstr 1)`spath)];
+  runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;`saveopt`seed`spath!(3;1234;sp)];
   scf:i.scfn[runnorm 1;enlist[`fnc]!enlist`nlp`class];
   pred:{x?max x}each avg (runnorm 0;runstr 0);
   score:scf[;runnorm[2]3]pred;

@@ -41,7 +41,7 @@ mdl:{[d;s;mtype]
  m[`:compile][`loss pykw lossdict[mtype];`optimizer pykw "rmsprop"];m}
 
 nlpmdl:{[dict;mdl]
- args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;path,(dict`spath),"/nlpmodel";path,"/outputs/cache_dir";1b;1b);
+ args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;path,"/",(dict`spath),"/nlpmodel";path,"/outputs/cache_dir";1b;1b);
  args,:dict`args;
  if[not `cache_dir in key hsym `$path,"/outputs";system "mkdir -p ",path,"/outputs/cache_dir"];
  pydict:`model_type`model_name`use_cuda`num_labels`args!
