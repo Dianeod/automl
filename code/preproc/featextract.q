@@ -47,3 +47,34 @@ prep.normalcreate:{[t;p]
   fe_end:.z.T-fe_start;
   (tb;fe_end)}
 
+// Creat features for nlp problems using TFIDF
+/. r > table with features created in accordance with the nlp feature creation procedure
+prep.nlpcreate:{[t;p]
+ fe_start:.z.T;
+ tstr:.ml.i.fndcols[t;"C"];
+ tb:prep.i.tfidf[`:fit_transform][raze t[tstr]][`:toarray][]`;
+ tb:flip (`$prep.i.tfidf[`:get_feature_names][]`)!m:flip tb;
+ system"mkdir -p ",p[`spath],"/nlp";
+ joblib:.p.import[`joblib];
+ joblib[`:dump][prep.i.tfidf;p[`spath],"/nlp/vectorize"];
+ sp:.p.import[`spacy];
+ dr:.p.import[`builtins][`:dir];
+ pos:dr[sp[`:parts_of_speech]]`;
+ unipos:`$pos[til (first where 0<count each pos ss\:"__")];
+ myparser:.nlp.newParser[`en;`isStop`uniPOS];
+ corpus:myparser raze t[tstr];
+ tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
+ tb:tb,'tpos;
+ tb[`isStop]:{sum[x]%count x}each corpus`isStop;
+ tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
+ if[0<count cols[t] except tstr;tb:tb,'(prep.normalcreate[(tstr)_t;p])[0]];
+ fe_end:.z.T-fe_start;
+ (tb;fe_end)}
+
+prep.nlppre:{[t;p]
+ fe_start:.z.T;
+ tstr:.ml.i.fndcols[t;"C"];
+ tnorm:prep.normalcreate[(tstr)_ t;p];
+ fe_end:.z.T-fe_start;
+ ((tb;tnorm[0]);fe_end)}
+

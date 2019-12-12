@@ -25,7 +25,7 @@ prep.i.autotype:{[t;typ;p]
       // restore the aggregating columns 
       tb:flip (l!t l,:()),cls!t cls;
       prep.i.errcol[cols t;cols tb;typ]];
-    typ~`nlp;tb:t;
+    typ in`nlp`nlppretrain;tb:t;
     '`$"This form of feature extraction is not currently supported"];
   tb}
 
@@ -53,7 +53,7 @@ prep.i.lencheck:{[t;tgt;typ;p]
       // Check that the number of unique aggregating sets is the same as number of targets
       if[count[tgt]<>count distinct $[1=count p`aggcols;t[p`aggcols];(,'/)t p`aggcols];
          '`$"Target count must equal count of unique agg values for fresh"];
-      typ in`tseries`normal;
+      typ in`tseries`normal`nlp`nlppretrain;
       if[count[tgt]<>count t;
          '`$"Must have the same number of targets as values in table"];
     '`$"Input for typ must be a supported type"];
@@ -166,3 +166,6 @@ prep.i.metafn:{[t;sl;fl]$[0<count sl;fl@\:/:flip(sl)#t;()]}
 
 // List of functions to be applied in metadata function for non-numeric data
 prep.i.nonnumeric:{[t](count;{count distinct x};{};{};{};{};t)}
+
+// Python functions for preprocessing nlp tables
+prep.i.tfidf:.p.import[`sklearn.feature_extraction.text][`:TfidfVectorizer][`stop_words pykw "english"]

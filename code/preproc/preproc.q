@@ -21,8 +21,8 @@ preproc:{[t;tgt;typ;p]
   $[`fresh=typ;
     [sepdata:(p[`aggcols],())#flip t;tb:flip (cols[t]except p[`aggcols])#flip t];
     tb:t];
-  tb:.ml.dropconstant tb;
-  tb:prep.i.nullencode[tb;med];
+  if[`nlp<>typ;tb:.ml.dropconstant tb;
+   tb:prep.i.nullencode[tb;med]];
   // perform an infinity replace and rejoin the separated aggregate columns for FRESH
   $[`fresh=typ;flip sepdata,;flip]flip .ml.infreplace tb
   }

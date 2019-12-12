@@ -1,4 +1,4 @@
-\d .aml
+/d .aml
 
 // The following aspects of the naming parameter naming are used throughout this file
 /* t   = data as table
@@ -38,7 +38,7 @@ i.updparam:{[t;p;typ]
 	   '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
 	   d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
-      typ=`nlp;
+      typ in `nlp`nlppretrain;
        {[t;p]d:i.nlpclassdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.aml.i.getdict p];
@@ -84,7 +84,7 @@ i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
 i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp!
-  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.xv.fitpredict;`multiclass`multilabel!(`.ml.accuracy;`.aml.i.multiaccuracy);
+  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.xv.fitpredict;`class`multiclass`multilabel!(`.ml.accuracy;`.ml.accuracy;`.aml.i.multiaccuracy);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass)}
 
 // Apply an appropriate scoring function to predictions from a model
@@ -101,6 +101,13 @@ i.scorepred:{[data;bmn;mdl;scf;fnm]
          get[".aml.",fnm,"predict"][(0n;(data 2;0n));mdl];
          mdl[`:predict][data 2]`];
   scf[;data 3]pred
+  }
+
+i.scoreprednlp:{[data;bmn;mdl;scf;fnm]
+  pred:$[bmn in i.nlplist,i.keraslist;
+         // Formatting of first param is a result of previous implementation choices
+         get[".aml.",fnm,"predictprob"][(0n;(data 2;0n));mdl];
+         mdl[`:predict_log_proba][data 2]`]
   }
 
 /  save down the best model
@@ -122,11 +129,12 @@ i.savemdl:{[bmn;bmo;mdls;nms]
  }
 
 // Table of models appropriate for the problem type being solved
-/* ptyp = problem type as a symbol, either `class or `reg
+/* ptyp = problem type as a symbol, either `class or `reg, `multiclass`multilabel for nlp
 /. r   > table with all information needed for appropriate models to be applied to data
 i.models:{[ptyp;tgt;p]
   if[not ptyp in key proc.i.files;'`$"text file not found"];
   d:proc.i.txtparse[ptyp;"/code/mdldef/"];
+  if[`nlppretrain~p`typ;d,:proc.i.txtparse[`multiclass;"/code/mdldef/"]];
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
@@ -156,7 +164,7 @@ i.nlplist:`Bert`RoBERTa`XLNet`XLM`DistilBERT`ALBERT`CamenBERT
 i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression;
 
 // Dictionary with mappings for console printing to reduce clutter in .aml.runexample
-i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save!
+i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save`nlpsco!
  ("\nThe following is a breakdown of information for each of the relevant columns in the dataset\n";
   "\nData preprocessing complete, starting feature creation";
   "\nFeature creation and significance testing complete";
@@ -165,7 +173,8 @@ i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save!
   "Continuing to final model fitting on holdout set";
   "Continuing to grid-search and final model fitting on holdout set";
   "\nBest model fitting now complete - final score on test set = ";
-  "Saving down procedure report to ")
+  "Saving down procedure report to ";
+  "Fitting for combined best model now complete - final score of test set = ")
 
 
 // Save down the metadata dictionary as a binary file which can be retrieved by a user or
@@ -180,7 +189,8 @@ i.savemeta:{[d;dt;fpath]
   $[first[string .z.o]in "lm";
     system"mv metadata ",;
     system"move metadata ",]fpath[0]`config;
-  -1"Saving down model parameters to ",fpath[1]`config;}
+  -1"Saving down model parameters to ",fpath[1]`config;
+   fpath[1]`config}
 
 // Retrieve the metadata information from a specified path
 /* fp = full file path denoting the location of the metadata to be retrieved
@@ -242,6 +252,26 @@ i.freshproc:{[t;p]
     t:pfeat  xcols flip flip[t],newcols!((count newcols;count t)#0f),()];
   flip value flip pfeat #"f"$0^t}
 
+// Apply feature creation and encoding procedures for nlp on new data
+/. r > table with feature creation and encodings applied appropriately
+i.nlpproc:{[t;p;fp] 
+ joblib:.p.import[`joblib];
+ vectorize:joblib[`:load][fp,"/nlp/vectorize"];
+ colst:.ml.i.fndcols[t;"C"];
+ tb:vectorize[`:transform][raze t[colst]][`:toarray][]`;
+ tb:flip (`$vectorize[`:get_feature_names][]`)!m:flip tb;
+ sp:.p.import[`spacy];
+ dr:.p.import[`builtins][`:dir];
+ pos:dr[sp[`:parts_of_speech]]`;
+ unipos:`$pos[til (first where 0<count each pos ss\:"__")];
+ myparser:.nlp.newParser[`en;`isStop`uniPOS];
+ corpus:myparser raze t[colst];
+ tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
+ tb:tb,'tpos;
+ tb[`isStop]:{sum[x]%count x}each corpus`isStop;
+ flip tb[p`features]}
+  
+
 
 // Extract the table that is to be used for the application of 
 // functions with(out) parameters to individual columns in a table
@@ -271,6 +301,10 @@ i.freshecols:{[efeat;cvals]
      (paramn:();paramv:())];
   `coln`f`pnum`pnames`pvals`valid!(coln;fnc;count[ploc];params ploc;paramv;1b)}
 
+// Extract the columns that are to be applied for nlp preprocessing
+/. r > table with feature creation and encodings applied appropriately
+ 
+
 /. r   > a table with the function and parameter information to be applied to normal tabular columns
 i.normecols:{[efeat;cvals]
   coln:cvals where cvals in cname:`$i.separ[efeat];
@@ -285,7 +319,7 @@ i.separ:{"_" vs string x}
 /. r   > the file paths in its full format or truncated for use in outputs to terminal
 i.pathconstruct:{[dt;svo]
   names:`config`models;
-  if[svo=2;names:names,`images`report]
+  if[svo in 2 3;names:names,`images`report]
   pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",y,"/";":";"."]};
   paths:path,/:pname[dt]each string names;
   paths:i.ssrwin[paths];
@@ -324,7 +358,8 @@ i.ssrwin:{[path]$[.z.o like "w*";ssr[path;"/";"\\"];path]}
 // data can make use of functions that speed up execution of feature extraction
 /. r > table with columns renamed appropriately
 i.rmvunder:{[t](`$ssr[;"_";""]each string cols t) xcol t}
- 
+
+// metrics for nlp multilabel models 
 i.precision_microavg:{.ml.precision[raze x;raze y;1b]}
 i.sensitivity_microavg:{.ml.sensitivity[raze x;raze y;1b]}
 

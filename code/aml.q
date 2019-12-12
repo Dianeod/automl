@@ -15,12 +15,12 @@ runexample:{[tb;tgt;ftype;ptype;p]
   if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
-  if[`nlp~ftype;dict[`tgtnum`ptyp]:(2|count tgt[1];ptype)];
+  if[`nlppretrain~ftype;dict[`tgtnum`ptyp]:$[ptype~`multiclass;(count distinct tgt;ptype);(count tgt[1];ptype)]];
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
-  if[sopt:dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[sopt&ftype~`nlp;dict[`spath]:1_-8_last spaths`config];
+  if[sopt:dict[`saveopt]in 1 2 3;spaths:i.pathconstruct[dtdict;dict`saveopt]];
+  if[sopt&ftype in `nlp`nlppretrain;dict[`spath]:1_-8_last spaths`config];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -28,15 +28,17 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // This provides an encoding map which can be used in reruns of automl even
   // if the data is no longer in the appropriate format for symbol encoding
   encoding:prep.i.symencode[tb;10;1;dict;::];
-  tb:$[ftype=`nlp;(tb;0);
-      [preproc[tb;tgt;ftype;dict];-1 i.runout`pre;
-        tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
-        ftype=`normal;prep.normalcreate[tb;dict];
-       '`$"Feature extraction type is not currently supported"]]];
-  feats:$[ftype=`nlp;cols tb 0;prep.freshsignificance[tb 0;tgt]];
+  if[not ftype~`nlppretrain;tb:$[ftype=`nlp;[strtab:flip strcol!
+     tb[strcol:.ml.i.fndcols[tb;"C"]];preproc[(strcol)_ tb;tgt;ftype;dict]];
+     preproc[tb;tgt;ftype;dict]];-1 i.runout`pre];
+  tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
+      ftype=`normal;prep.normalcreate[tb;dict];
+      ftype=`nlp;prep.nlpcreate[tb;dict];
+      ftype=`nlppretrain;(tb;0);
+       '`$"Feature extraction type is not currently supported"];
+  feats:prep.freshsignificance[tb 0;tgt];
   // Encode target data if target is a symbol vector
   if[11h~type tgt;tgt:.ml.labelencode tgt];
-
   // Apply the appropriate train/test split to the data
   // the following currently runs differently if the parameters are defined
   // in a file or through the more traditional dictionary/(::) format
@@ -62,14 +64,13 @@ runexample:{[tb;tgt;ftype;ptype;p]
     -1 i.runout`gs;
     prms:proc.gs.psearch[xtrn;ytrn;xtst;ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
-  if[ftype~`nlp];
-  -1 i.runout[`sco],string[score],"\n";
+  if[not 3=dict[`saveopt];-1 i.runout[`sco],string[score],"\n";]
   // Save down a pdf report summarizing the running of the pipeline
-  if[2=dict`saveopt;
+  if[dict[`saveopt] in 2 3;
     -1 i.runout[`save],spaths[1]`report;
     report_param:post.i.reportdict[ctb;bm;tb;dtdict;path;(prms 1;score;dict`xv;dict`gs);spaths];
     post.report[report_param;dtdict;spaths[0]`report]];
-  if[dict[`saveopt]in 1 2;
+  if[dict[`saveopt]in 1 2 3;
     // Extract the Python library from which the best model was derived, used for model rerun
     pylib:?[mdls;enlist(=;`model;enlist bm 1);();`lib];
     // additional metadata information to be saved to disk
@@ -78,7 +79,20 @@ runexample:{[tb;tgt;ftype;ptype;p]
     metadict:dict,hp,exmeta;
     i.savemdl[bm 1;expmdl;mdls;spaths];
     i.savemeta[metadict;dtdict;spaths]];
+  $[3=dict[`saveopt];
+    (i.scoreprednlp[data;bm[1];last bm;fn;funcnm];dict,enlist[`ptyp]!enlist ptype;data);]
   }
+
+runexamplenlp:{[tb;tgt;ftype;ptype;p]
+  strt:.ml.i.fndcols[tb;"C"];
+  runstr:runexample[strtb:?[tb;();0b;strt!strt];tgt;ftype;`multiclass;`saveopt`seed!(3;1234)];
+  wsvjlb;
+  if[count[strt]<count cols tb;
+  runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;`saveopt`seed!(3;1234)];
+  scf:i.scfn[runnorm 1;enlist[`fnc]!enlist`nlp`class];
+  pred:{x?max x}each avg (runnorm 0;runstr 0);
+  score:scf[;runnorm[2]3]pred;
+  -1 i.runout[`nlpsco],string[score],"\n";]}
 
 
 // Function for the processing of new data based on a previous run and return of predicted target 
@@ -95,8 +109,10 @@ newproc:{[t;fp]
   data:$[`normal=typ;
     i.normalproc[t;metadata];
     `fresh=typ;
-    i.freshproc[t;metadata];
-    `nlp~typ;t;
+    i.freshproc[t;metadata]; 
+    `nlp=typ;
+    i.nlpproc[t;metadata;path,"/outputs/",fp];
+    `nlppretrain~typ;t;
     '`$"This form of operation is not currently supported"
     ];
   $[(mp:metadata[`pylib])in `sklearn`keras;
