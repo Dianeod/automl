@@ -11,7 +11,7 @@
 /* p     = parameters (::) produces default other changes are user dependent
 
 runexample:{[tb;tgt;ftype;ptype;p]
-  dtdict:`stdate`sttime!(.z.D;.z.T);
+  dtdict:`stdate`sttime!$[0N~p`spath;(.z.D;.z.T);(`$-17_8_p`spath;`$23_p`spath)];
   if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
@@ -80,24 +80,24 @@ runexample:{[tb;tgt;ftype;ptype;p]
     i.savemdl[bm 1;expmdl;mdls;spaths];
     i.savemeta[metadict;dtdict;spaths]];
   $[3=dict[`saveopt];
-    (i.scoreprednlp[data;bm[1];last bm;fn;funcnm];dict,enlist[`ptyp]!enlist ptype;data);]
+    (i.scoreprednlp[data;bm[1];last bm;fn;funcnm];dict,`ptyp`prob!(ptype;`prob);data);]
   }
 
 runexamplenlp:{[tb;tgt;ftype;ptype;p]
   strt:.ml.i.fndcols[tb;"C"];
   runstr:runexample[strtb:?[tb;();0b;strt!strt];tgt;ftype;`multiclass;`saveopt`seed!(3;1234)];
-  wsvjlb;
   if[count[strt]<count cols tb;
-  runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;`saveopt`seed!(3;1234)];
+  runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;`saveopt`seed`spath!(3;1234;(runstr 1)`spath)];
   scf:i.scfn[runnorm 1;enlist[`fnc]!enlist`nlp`class];
   pred:{x?max x}each avg (runnorm 0;runstr 0);
   score:scf[;runnorm[2]3]pred;
-  -1 i.runout[`nlpsco],string[score],"\n";]}
+  -1 "\n",i.runout[`nlpsco],string[score],"\n";]}
 
 
 // Function for the processing of new data based on a previous run and return of predicted target 
 /* t = table of new data to be predicted
 /* fp = the path to the folder which the /Config and /Models folders are
+
 
 newproc:{[t;fp]
   // Relevant python functionality for loading of models
@@ -114,18 +114,18 @@ newproc:{[t;fp]
     i.nlpproc[t;metadata;path,"/outputs/",fp];
     `nlppretrain~typ;t;
     '`$"This form of operation is not currently supported"
-    ];
+    ];i
   $[(mp:metadata[`pylib])in `sklearn`keras;
     // Apply the relevant saved down model to new data
     [fp_upd:i.ssrwin[path,"/outputs/",fp,"/models/",string metadata[`best_model]];
      if[bool:(mdl:metadata[`best_model])in i.keraslist;fp_upd,:".h5"];
      model:$[mp~`sklearn;skload;krload]fp_upd;
      $[bool;
-       [fnm:neg[5]_string lower mdl;get[".aml.",fnm,"predict"][(0n;(data;0n));model]];
-       model[`:predict;<]data]];
+       [fnm:neg[5]_string lower mdl;get[".aml.",fnm,$[prdt:`prob~metadata[`pred];"predictprob";"predict"]][(0n;(data;0n));model]];
+       model[$[prdt;`:predict_log_proba;`:predict];<]data]];
      (mp:metadata[`pylib])~`simpletransformers;[
      model:nlpmdl[metadata;metadata`best_model];
-     first model[`:predict;<]raze flip value flip data];
+     $[prdt;last;first] model[`:predict;<]raze flip value flip data];
     '`$"The current model type you are attempting to apply is not currently supported"]
   }
 

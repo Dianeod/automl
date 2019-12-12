@@ -44,7 +44,7 @@ i.updparam:{[t;p;typ]
            [if[10h~ty;p:.aml.i.getdict p];
             if[-11h~ty;p:.aml.i.getdict$[":"~first p;1_;]p:string p];
             $[min key[p]in key d;d,p;
-              '`$"You can only pass appropriate keys to normal"]];
+              '`$"You can only pass appropriate keys to nlp"]];
            p~(::);d;
            '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
@@ -80,12 +80,12 @@ i.getdict:{[nm]
 i.freshdefault:{`aggcols`params`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ({first cols x};`.ml.fresh.params;(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;
    `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.ttsnonshuff;0.2)}
-i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
+i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`spath!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
-i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp!
+   `rand_val;2;0.2;`.ml.traintestsplit;0.2;"")}
+i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`spath!
   (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.xv.fitpredict;`class`multiclass`multilabel!(`.ml.accuracy;`.ml.accuracy;`.aml.i.multiaccuracy);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass)}
+   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass;"outputs")}
 
 // Apply an appropriate scoring function to predictions from a model
 /* xtst = test data

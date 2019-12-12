@@ -41,7 +41,7 @@ mdl:{[d;s;mtype]
  m[`:compile][`loss pykw lossdict[mtype];`optimizer pykw "rmsprop"];m}
 
 nlpmdl:{[dict;mdl]
- args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;(dict`spath),"/nlpmodel";path,"/outputs/cache_dir";1b;1b);
+ args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;path,(dict`spath),"/nlpmodel";path,"/outputs/cache_dir";1b;1b);
  args,:dict`args;
  if[not `cache_dir in key hsym `$path,"/outputs";system "mkdir -p ",path,"/outputs/cache_dir"];
  pydict:`model_type`model_name`use_cuda`num_labels`args!
@@ -70,7 +70,7 @@ seq:.p.import[`keras.models]`:Sequential;
 dns:.p.import[`keras.layers]`:Dense;
 nps:.p.import[`numpy.random][`:seed];
 pdD:.p.import[`pandas]`:DataFrame;
-nlpclass:.p.import[`simpletransformers.classification]`:ClassificationModel;
+nlpmulticlass:.p.import[`simpletransformers.classification]`:ClassificationModel;
 nlpmultilabel:.p.import[`simpletransformers.classification]`:MultiLabelClassificationModel;
 
 /if[0>system"s";.ml.mproc.init[abs system"s"]("\\l ",path,"/automl.q";"\\l ",path,"/code/")]
