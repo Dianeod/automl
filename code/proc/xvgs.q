@@ -16,7 +16,7 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
   // this needs to be handled differently for sklearn and keras models
   s:$[ms:mdls[`seed]~`seed;
       $[sk;enlist[`random_state]!enlist p`seed;(p[`seed],mdls[`typ])];
-      (10h~type raze first xtrn)&`nlppretrain~p`typ;(p;mdls[`model]);::];
+      `nlppretrain~p`typ;(p;mdls[`model]);::];
     $[ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
     // and the model is from sklearn, this is in order to incorporate the random state definition.
@@ -73,7 +73,7 @@ proc.gs.psearch:{[xtrn;ytrn;xtst;ytst;bm;p;typ;mdls]
 /*      within the cross-validation/grid search procedures from the xtrain and ytrain data supplied
 
 /. r > The value predicted on the validation set and the true value
-xv.fitpredict:{[f;hp;d]($[0h~type hp;f[d;hp[0];hp[1]];@[.[f[][hp]`:fit;d 0]`:predict_proba;d[1]0]`];d[1]1)}
+xv.fitpredict:{[f;hp;d]($[0h~type hp;f[d;hp[0];hp[1]];@[.[f[][hp]`:fit;d 0]`:predict;d[1]0]`];d[1]1)}
 
 /* fn = The scoring function which is to be used for evaluating the performance of the grid search
 /. r  > The score achieved for each cross validation set based on the user defined scoring function

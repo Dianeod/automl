@@ -60,7 +60,7 @@ binarypredict  :{[d;m].5<raze m[`:predict][npa d[1]0]`}
 multipredict:{[d;m]m[`:predict_classes][npa d[1]0]`}
 regpredict  :{[d;m]raze m[`:predict][npa d[1]0]`}
 
-binarypredictprob:{[d;m]log flip(poscl;1-poscl:m[`:predict][npa d[1]0]`)}
+binarypredictprob:{[d;m]flip(poscl;1-poscl:m[`:predict][npa d[1]0]`)}
 
 nlppredict  :{[d;m]first m[`:predict][$[0h~type d[1]0;raze;] d[1]0]`}
 nlppredictprob  :{[d;m]last m[`:predict][$[0h~type d[1]0;raze;] d[1]0]`}

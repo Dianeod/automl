@@ -107,7 +107,7 @@ i.scoreprednlp:{[data;bmn;mdl;scf;fnm]
   pred:$[bmn in i.nlplist,i.keraslist;
          // Formatting of first param is a result of previous implementation choices
          get[".aml.",fnm,"predictprob"][(0n;(data 2;0n));mdl];
-         mdl[`:predict_log_proba][data 2]`]
+         mdl[`:predict_proba][data 2]`]
   }
 
 /  save down the best model
@@ -138,11 +138,12 @@ i.models:{[ptyp;tgt;p]
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
-  if[ptyp in `class;
+  if[cl:ptyp in `class;
     // For classification tasks remove inappropriate classification models
     m:$[2<count distinct tgt;
         delete from m where typ in `binary`nlp;
         delete from m where model in `MultiKeras]];
+  if[cl&3~p`saveopt;m:delete from m where fnc=`svm];
   // Add a column with appropriate initialized models for each row
   m:update minit:.aml.proc.i.mdlfunc .'flip(lib;fnc;model)from m;
   // Threshold models used based on unique target values
@@ -272,7 +273,6 @@ i.nlpproc:{[t;p;fp]
  flip tb[p`features]}
   
 
-
 // Extract the table that is to be used for the application of 
 // functions with(out) parameters to individual columns in a table
 /* efeat = extracted features we want to build a new table from
@@ -320,7 +320,7 @@ i.separ:{"_" vs string x}
 i.pathconstruct:{[dt;svo]
   names:$[svo=4;`norm`nlp;`config`models];
   if[svo in 2 3;names:names,`images`report]
-  pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",$[not 10h~0N!type x[`pt];y;x[`pt],"/",y],"/";":";"."]};
+  pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",$[not 10h~type x[`pt];y;x[`pt],"/",y],"/";":";"."]};
   paths:path,/:pname[dt]each string names;
   paths:i.ssrwin[paths];
   {[fnm]system"mkdir",$[.z.o like "w*";" ";" -p "],fnm}each paths;

@@ -19,3 +19,4 @@
 .aml.i.sensitivity_microavg | desc
 .aml.i.precision_macroavg   | desc
 .aml.i.sensitivity_macroavg | desc
+.aml.i.multiaccuracy        | desc
