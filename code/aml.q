@@ -11,7 +11,8 @@
 /* p     = parameters (::) produces default other changes are user dependent
 
 runexample:{[tb;tgt;ftype;ptype;p]
-  dtdict:`stdate`sttime!$[`spath~p`spath;(.z.D;.z.T);(`$-17_p`spath;`$15_p`spath)];
+  $[ftype~`nlpptrain;runexamplenlp[tb;tgt;`nlppretrain;ptype;p];
+  [dtdict:`stdate`sttime!$[`spath~p`spath;(.z.D;.z.T);(`$-17_p`spath;`$15_p`spath)];
   if[3~p`saveopt;dtdict:dtdict,enlist[`pt]!enlist$[ftype~`normal;"norm";"nlp"]];
   if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
@@ -21,7 +22,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[sopt:dict[`saveopt]in 1 2 3;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[sopt&ftype in `nlp`nlppretrain;dict[`spath]:1_-8_last spaths`config];
+  if[sopt&ftype in`nlpvect`nlppretrain;dict[`spath]:1_-8_last spaths`config];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -29,17 +30,17 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // This provides an encoding map which can be used in reruns of automl even
   // if the data is no longer in the appropriate format for symbol encoding
   encoding:prep.i.symencode[tb;10;1;dict;::];
-  if[not ftype~`nlppretrain;
-  tb:$[ftype=`nlp;[strtab:flip strcol!
+  $[ftype~`nlppretrain;prep.i.lencheck[tb;tgt;ftype;dict];
+  [tb:$[ftype=`nlpvect;[strtab:flip strcol!
      tb[strcol:.ml.i.fndcols[tb;"C"]];
-     $[count[strcol]<count cols tb;strtab,'preproc[(strcol)_ tb;tgt;ftype;dict];strtab]];
-     preproc[tb;tgt;ftype;dict]];-1 i.runout`pre];
+     $[count[strcol]<count cols tb;strtab,'preproc[(strcol)_tb;tgt;ftype;dict];strtab]];
+     preproc[tb;tgt;ftype;dict]];-1 i.runout`pre]];
   tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
       ftype=`normal;prep.normalcreate[tb;dict];
-      ftype=`nlp;prep.nlpcreate[tb;dict];
+      ftype=`nlpvect;prep.nlpcreate[tb;dict];
       ftype=`nlppretrain;(tb;0);
        '`$"Feature extraction type is not currently supported"];
-  feats:$[ftype~`nlppretrain;cols tb 0;prep.freshsignificance[tb 0;tgt]];
+  feats:prep.freshsignificance[tb 0;tgt];
   // Encode target data if target is a symbol vector
   if[11h~type tgt;tgt:.ml.labelencode tgt];
   // Apply the appropriate train/test split to the data
@@ -83,16 +84,18 @@ runexample:{[tb;tgt;ftype;ptype;p]
     i.savemdl[bm 1;expmdl;mdls;spaths];
     i.savemeta[metadict;dtdict;spaths]];
   $[3=dict[`saveopt];
-    (i.scoreprednlp[data;bm[1];expmdl;fn;funcnm];dict,`ptyp`prob!(ptype;`prob);data:(xtrn;ytrn;xtst;ytst));]
+    (i.scoreprednlp[data;bm[1];expmdl;fn;funcnm];dict,`ptyp`prob!(ptype;`prob);data:(xtrn;ytrn;xtst;ytst));]]]
   }
+
+// For nlppretrained models, splits the dataset by text and normal columns to be passed to runexample
 
 runexamplenlp:{[tb;tgt;ftype;ptype;p]
   dtdict:`stdate`sttime!(.z.D;.z.T);
   spath:i.pathconstruct[dtdict;4];
   strt:.ml.i.fndcols[tb;"C"];
-  runstr:runexample[strtb:?[tb;();0b;strt!strt];tgt;ftype;$[ntgt:1=count[tgt 0];`multiclass;`multilabel];`saveopt`seed`spath!(3;1234;sp:9_-5_last spath`nlp)];
+  runstr:runexample[strtb:?[tb;();0b;strt!strt];tgt;ftype;$[ntgt:1=count[tgt 0];`multiclass;`multilabel];(`saveopt`seed`spath!(3;1234;sp:9_-5_last spath`nlp)),$[(::)~p;();p]];
   $[count[strt]<count cols tb;
-  [runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;`saveopt`seed`spath!(3;1234;sp)];
+  [runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;(`saveopt`seed`spath!(3;1234;sp)),$[(::)~p;();p]];
    scf:i.scfn[runnorm 1;enlist[`fnc]!enlist`nlp`class];
    pred:{x?max x}each avg(runnorm 0;exp runstr 0);
    score:scf[;runnorm[2]3]pred;
@@ -107,8 +110,9 @@ runexamplenlp:{[tb;tgt;ftype;ptype;p]
 
 
 newproc:{[t;fp]
+  $[min`norm`nlp in key hsym`$path,"/outputs/",fp;newprocnlp[t;fp];
   // Relevant python functionality for loading of models
-  skload:.p.import[`joblib][`:load];
+  [skload:.p.import[`joblib][`:load];
   krload:.p.import[`keras.models][`:load_model];
   // Retrieve the metadata from a file path based on the run date/time
   metadata:i.getmeta[i.ssrwin[path,"/outputs/",fp,"/config/metadata"]];
@@ -117,24 +121,25 @@ newproc:{[t;fp]
     i.normalproc[t;metadata];
     `fresh=typ;
     i.freshproc[t;metadata]; 
-    `nlp=typ;
+    `nlpvect=typ;
     i.nlpproc[t;metadata;path,"/outputs/",fp];
     `nlppretrain~typ;t;
-    '`$"This form of operation is not currently supported"
-    ];
-  $[(mp:metadata[`pylib])in `sklearn`keras;
+    '`$"This form of operation is not currently supported"];
+  $[(mp:metadata[`pylib])in`sklearn`keras;
     // Apply the relevant saved down model to new data
     [fp_upd:i.ssrwin[path,"/outputs/",fp,"/models/",string metadata[`best_model]];
      if[bool:(mdl:metadata[`best_model])in i.keraslist;fp_upd,:".h5"];
      model:$[mp~`sklearn;skload;krload]fp_upd;
      $[bool;
-       [fnm:neg[5]_string lower mdl;get[".aml.",fnm,$[(1_last (where "/"=fp)_fp) in("nlp";"norm");"predictprob";"predict"]][(0n;(data;0n));model]];
-       model[$[(1_last (where "/"=fp)_fp) in("nlp";"norm");`:predict_proba;`:predict];<]data]];
-     (mp:metadata[`pylib])~`simpletransformers;[
+       [fnm:neg[5]_string lower mdl;get[".aml.",fnm,$[(1_last(where"/"=fp)_fp)in("nlp";"norm");"predictprob";"predict"]][(0n;(data;0n));model]];
+       model[$[(1_last(where"/"=fp)_fp)in("nlp";"norm");`:predict_proba;`:predict];<]data]];
+     metadata[`pylib]~`simpletransformers;[
      model:nlpmdl[metadata;metadata`best_model];
-     $[`multiclass~metadata`ptyp;exp last;first]model[`:predict;<]raze flip value flip data];
-    '`$"The current model type you are attempting to apply is not currently supported"]
+     $[`multiclass~metadata`ptyp;{exp last x};first]model[`:predict;<]raze flip value flip data];
+    '`$"The current model type you are attempting to apply is not currently supported"]]]
   }
+
+// For nlp saved models, runs the models separately normal and text data
 
 newprocnlp:{[tb;fp]
  strt:.ml.i.fndcols[tb;"C"];

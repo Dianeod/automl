@@ -38,7 +38,7 @@ i.updparam:{[t;p;typ]
 	   '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
 	   d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
-      typ in `nlp`nlppretrain;
+      typ in `nlpvect`nlppretrain;
        {[t;p]d:i.nlpclassdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.aml.i.getdict p];
@@ -268,7 +268,8 @@ i.nlpproc:{[t;p;fp]
  myparser:.nlp.newParser[`en;`isStop`uniPOS];
  corpus:myparser raze t[colst];
  tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
- tb:tb,'tpos;
+ sentt:.nlp.sentiment each raze t[colst];
+ tb:tb,'tpos,'sentt;
  tb[`isStop]:{sum[x]%count x}each corpus`isStop;
  flip tb[p`features]}
   

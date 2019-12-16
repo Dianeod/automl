@@ -64,7 +64,8 @@ prep.nlpcreate:{[t;p]
  myparser:.nlp.newParser[`en;`isStop`uniPOS];
  corpus:myparser raze t[tstr];
  tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
- tb:tb,'tpos;
+ sentt:.nlp.sentiment each raze t[tstr];
+ tb:tb,'tpos,'sentt;
  tb[`isStop]:{sum[x]%count x}each corpus`isStop;
  tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
  if[0<count cols[t] except tstr;tb:tb,'(prep.normalcreate[(tstr)_t;p])[0]];
@@ -72,7 +73,7 @@ prep.nlpcreate:{[t;p]
  (tb;fe_end)}
 
 prep.nlppre:{[t;p]
- fe_start:.z.T;
+ fe_start:.zT;
  tstr:.ml.i.fndcols[t;"C"];
  tnorm:prep.normalcreate[(tstr)_ t;p];
  fe_end:.z.T-fe_start;

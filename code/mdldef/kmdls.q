@@ -9,7 +9,6 @@
 /* dict = dictionary of parameters
 /* mdl = name of bets model being used
 
-
 fitscore:{[d;s;mtype]
   if[mtype~`multi;d[;1]:npa@'flip@'./:[;((::;0);(::;1))](0,count d[0]1)_/:value .ml.i.onehot1(,/)d[;1]];
   m:mdl[d;s;mtype];
@@ -41,11 +40,12 @@ mdl:{[d;s;mtype]
  m[`:compile][`loss pykw lossdict[mtype];`optimizer pykw "rmsprop"];m}
 
 nlpmdl:{[dict;mdl]
- args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;path,"/",(dict`spath),"/nlpmodel";path,"/outputs/cache_dir";1b;1b);
+ args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;path,"/",(dict`spath),"/nlpmodel/",string[lower mdl];path,"/outputs/cache_dir";1b;1b);
  args,:dict`args;
- if[not `cache_dir in key hsym `$path,"/outputs";system "mkdir -p ",path,"/outputs/cache_dir"];
+ modeln:$[`best_model in key dict;path,"/",(dict`spath),"/nlpmodel/",string[lower mdl];nlpdict[mdl]];
+ if[not`cache_dir in key hsym`$path,"/outputs";system "mkdir -p ",path,"/outputs/cache_dir"];
  pydict:`model_type`model_name`use_cuda`num_labels`args!
-        (lower mdl;nlpdict[mdl];0b;dict`tgtnum;args);
+        (lower mdl;modeln;0b;dict`tgtnum;args);
  m:get[".aml.nlp",string[dict`ptyp]][pykwargs pydict];m}
 
 fit:{[d;m]m[`:fit][npa d[0]0;d[0]1;`batch_size pykw 32;`verbose pykw 0];m}

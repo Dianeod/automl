@@ -25,7 +25,7 @@ prep.i.autotype:{[t;typ;p]
       // restore the aggregating columns 
       tb:flip (l!t l,:()),cls!t cls;
       prep.i.errcol[cols t;cols tb;typ]];
-    typ in`nlp`nlppretrain;tb:t;
+    typ in`nlpvect`nlppretrain;tb:t;
     '`$"This form of feature extraction is not currently supported"];
   tb}
 
@@ -53,7 +53,7 @@ prep.i.lencheck:{[t;tgt;typ;p]
       // Check that the number of unique aggregating sets is the same as number of targets
       if[count[tgt]<>count distinct $[1=count p`aggcols;t[p`aggcols];(,'/)t p`aggcols];
          '`$"Target count must equal count of unique agg values for fresh"];
-      typ in`tseries`normal`nlp`nlppretrain;
+      typ in`tseries`normal`nlpvect`nlppretrain;
       if[count[tgt]<>count t;
          '`$"Must have the same number of targets as values in table"];
     '`$"Input for typ must be a supported type"];
@@ -144,7 +144,7 @@ prep.i.truncsvd:{[t;c;p]
 
 // Error message related to the 'refusal' of the feature significance tests to 
 // find appropriate columns to explain the data from those produced
-prep.i.freshsigerr:"The feature significance extraction process deemed none of the features",
+prep.i.freshsigerr:"The feature significance extraction process deemed none of the features ",
   "to be important continuing anyway"
 
 
