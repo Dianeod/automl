@@ -271,7 +271,11 @@ i.nlpproc:{[t;p;fp]
  tb:tb,'tpos,'sentt;
  tb[`isStop]:{sum[x]%count x}each corpus`isStop;
  flip tb[p`features]}
-  
+ 
+i.nlppreproc:{[t;p]
+  tb:prep.nlppre[t;p];
+  flip tb[0][p`features]}
+ 
 // Extract the table that is to be used for the application of 
 // functions with(out) parameters to individual columns in a table
 /* efeat = extracted features we want to build a new table from

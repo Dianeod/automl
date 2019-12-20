@@ -28,7 +28,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
   // This provides an encoding map which can be used in reruns of automl even
   // if the data is no longer in the appropriate format for symbol encoding
   encoding:prep.i.symencode[tb;10;1;dict;::];
-  tb:$[cnttxt:not count[strcol:.ml.i.fndcols[tb;"C"]]<count cols tb;
+  tb:$[not count[strcol:.ml.i.fndcols[tb;"C"]]<count cols tb;
      strtab:strcol#tb;ftype in `nlpvect`nlppretrain;(strtab:strcol#tb)
      ,'preproc[(strcol)_tb;tgt;ftype;dict];preproc[tb;tgt;ftype;dict]];-1 i.runout`pre;
   tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
@@ -48,7 +48,6 @@ runexample:{[tb;tgt;ftype;ptype;p]
   xtrn:flip value flip tts`xtrain;xtst:flip value flip tts`xtest;
   ytrn:tts`ytrain;ytst:tts`ytest;
   mdls:i.kerascheck[mdls;tts;tgt];
-  if[`nlppretrain~ftype;if[cnttxt;mdls:select from mdls where fnc=`nlp]];
   // Check if Tensorflow/Keras not available for use, NN models removed
   if[1~checkimport[];mdls:?[mdls;enlist(<>;`lib;enlist `keras);0b;()]];
   -1 i.runout`sig;-1 i.runout`slct;-1 i.runout[`tot],string[ctb:count cols tab];
@@ -57,23 +56,23 @@ runexample:{[tb;tgt;ftype;ptype;p]
   fn:i.scfn[dict;mdls];
   // Do not run grid search on deterministic models returning score on the test set and model
   if[comb:2~count bm[1];
-   data0:(xtrn[;inorm];ytrn;xtst[;inorm:where not 10h=type each first xtrn];ytst);
-   data1:(xtrn[;inlp];ytrn;xtst[;inlp:where 10h=type each first xtrn];ytst);
+  data:((xtrn[;inorm];ytrn;xtst[;inorm:where not 10h=type each first xtrn];ytst);
+        (xtrn[;inlp];ytrn;xtst[;inlp:where 10h=type each first xtrn];ytst));
    funcnm:string exec fnc from mdls where model in bm[1];
-   score:fn[;ytst]proc.i.imax each avg each flip(i.scoreprednlp[data0;bm[1;0];first expmdl;funcnm[0]];
-       i.scoreprednlp[data1;bm[1;1];last expmdl:last bm;funcnm[1]]);
+   score:fn[;ytst]proc.i.imax each avg i.scoreprednlp'[data;bm[1];expmdl:last bm;funcnm];
    bm[1]:`$"_" sv string bm[1]];
-  if[a:not[comb]&all bm[1]in i.excludelist;
+  if[not[comb]&a:bm[1]in i.excludelist;
     inds:$[not bm[1] in i.nlplist;where not 10h=type each first xtrn;where 10h=type each first xtrn];
     data:(xtrn[;inds];ytrn;xtst[;inds];ytst);
     funcnm:string first exec fnc from mdls where model=bm[1];
     -1 i.runout`ex;score:i.scorepred[data;bm[1];expmdl:last bm;fn;funcnm]];
   // Run grid search on the best model for the parameter sets defined in hyperparams.txt
-  if[b:not a;
+  if[not[comb]&b:not a;
     -1 i.runout`gs;
     prms:proc.gs.psearch[xtrn[;inds];ytrn;xtst[;inds:where not 10h=type each first xtst];ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
-  if[`nlppretrain~ftype;ctb:$[all bm[1] in i.nlplist;count strcol;count feats except strcol]];
+  if[(`nlppretrain~ftype)&`Combination<>first key bm[0];$[bm[1] in i.nlplist;
+     cbt:count feats:strcol;(cbt:count feats except strcol;feats:feats except strcol)]];
   // Save down a pdf report summarizing the running of the pipeline
   if[dict[`saveopt] in 2;
     -1 i.runout[`save],spaths[1]`report;
@@ -81,7 +80,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
     post.report[report_param;dtdict;spaths[0]`report]];
   if[dict[`saveopt]in 1 2;
     // Extract the Python library from which the best model was derived, used for model rerun
-    pylib:?[mdls;enlist(=;`model;enlist bm 1);();`lib];
+    pylib:$[`nlppretain~dtype;`mixed;?[mdls;enlist(=;`model;enlist bm 1);();`lib]];
     // additional metadata information to be saved to disk
     hp:$[b;enlist[`hyper_parameters]!enlist prms 1;()!()];
     exmeta:`features`test_score`best_model`symencode`pylib!(feats;score;bm 1;encoding;pylib 0);
@@ -90,34 +89,15 @@ runexample:{[tb;tgt;ftype;ptype;p]
     i.savemeta[metadict;dtdict;spaths]];
   }
 
-// For nlppretrained models, splits the dataset by text and normal columns to be passed to runexample
-
-runexamplenlp:{[tb;tgt;ftype;ptype;p]
-  dtdict:`stdate`sttime!(.z.D;.z.T);
-  spath:i.pathconstruct[dtdict;4];
-  strt:.ml.i.fndcols[tb;"C"];
-  runstr:runexample[strtb:?[tb;();0b;strt!strt];tgt;ftype;$[ntgt:1=count[tgt 0];`multiclass;`multilabel];(`saveopt`seed`spath!(3;1234;sp:9_-5_last spath`nlp)),$[(::)~p;();p]];
-  $[count[strt]<count cols tb;
-  [runnorm:runexample[normtb:(strt)_ tb;tgt;`normal;ptype;(`saveopt`seed`spath!(3;1234;sp)),$[(::)~p;();p]];
-   scf:i.scfn[runnorm 1;enlist[`fnc]!enlist`nlp`class];
-   pred:{x?max x}each avg(runnorm 0;exp runstr 0);
-   score:scf[;runnorm[2]3]pred;
-  -1 "\n",i.runout[`nlpsco],string[score],"\n";];
-  [scf:i.scfn[runstr 1;enlist[`fnc]!enlist`nlp`n];
-  ;-1 "\n",i.runout[`sco],string[scf[;runstr[2]3]$[ntgt;{x?max x}each runstr 0;0.5<runstr 0]],"\n";]]}
-
-
 // Function for the processing of new data based on a previous run and return of predicted target 
 /* t = table of new data to be predicted
 /* fp = the path to the folder which the /Config and /Models folders are
 
 
 newproc:{[t;fp]
-  // Relevant python functionality for loading of models
-  skload:.p.import[`joblib][`:load];
-  krload:.p.import[`keras.models][`:load_model];
   // Retrieve the metadata from a file path based on the run date/time
   metadata:i.getmeta[i.ssrwin[path,"/outputs/",fp,"/config/metadata"]];
+   fgh;
   typ:metadata`typ;
   data:$[`normal=typ;
     i.normalproc[t;metadata];
@@ -125,9 +105,7 @@ newproc:{[t;fp]
     i.freshproc[t;metadata]; 
     `nlpvect=typ;
     i.nlpproc[t;metadata;path,"/outputs/",fp];
-    `nlppretrain~typ;$[metadata[`best_model]in i.nlplist;raze t[.ml.i.fndcols[t;"C"]];
-     [metadata[`features]:metadata[`features] except strcols:.ml.i.fndcols[t;"C"];
-      ;i.normalproc[(strcols)_t;metadata]]];
+    `nlppretrain~typ;$[metadata[`best_model] in i.nlplist;(ml.i.fndcols[t;"C"])#t;i.nlppreproc[t;metadata]]
     '`$"This form of operation is not currently supported"];
   $[(mp:metadata[`pylib])in`sklearn`keras;
     // Apply the relevant saved down model to new data
@@ -140,8 +118,28 @@ newproc:{[t;fp]
      metadata[`pylib]~`simpletransformers;[
      model:nlpmdl[metadata;metadata`best_model];
      first model[`:predict;<]data];
+    metadata[`pylib]~`mixed;[model:nlpmdl[metadata;metadata`best_model];
+     first model[`:predict;<]data];
     '`$"The current model type you are attempting to apply is not currently supported"]
   }
+
+procmodel:{[metadata;]
+  // Relevant python functionality for loading of models
+    skload:.p.import[`joblib][`:load];
+    krload:.p.import[`keras.models][`:load_model];
+    $[(mp:metadata[`pylib])in`sklearn`keras; 
+    // Apply the relevant saved down model to new data
+    [fp_upd:i.ssrwin[path,"/outputs/",fp,"/models/",string metadata[`best_model]];
+     if[bool:(mdl:metadata[`best_model])in i.keraslist;fp_upd,:".h5"];
+     model:$[mp~`sklearn;skload;krload]fp_upd;
+     $[bool;
+       [fnm:neg[5]_string lower mdl;get[".aml.",fnm,"predict"][(0n;(data;0n));model]];
+       model[[`:predict];<]data]];
+     metadata[`pylib]~`simpletransformers;[
+     model:nlpmdl[metadata;metadata`best_model];
+     first model[`:predict;<]data];
+    '`$"The current model type you are attempting to apply is not currently supported"]
+}
 
 // For nlp saved models, runs the models separately normal and text data
 

@@ -40,7 +40,7 @@ mdl:{[d;s;mtype]
  m[`:compile][`loss pykw lossdict[mtype];`optimizer pykw "rmsprop"];m}
 
 nlpmdl:{[dict;mdl]
- args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;path,"/",(dict`spath),"/nlpmodel/",string[lower mdl];path,"/outputs/cache_dir";1b;1b);
+ args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!(1b;0b;path,"/",(dict`spath),"/nlpmodel/",string[lower mdl];path,"/outputs/cache_dir_new";1b;0b);
  args,:dict`args;
  modeln:$[`best_model in key dict;path,"/",(dict`spath),"/nlpmodel/",string[lower mdl];nlpdict[mdl]];
  if[not`cache_dir in key hsym`$path,"/outputs";system "mkdir -p ",path,"/outputs/cache_dir"];
