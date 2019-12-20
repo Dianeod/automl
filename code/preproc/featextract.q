@@ -73,9 +73,19 @@ prep.nlpcreate:{[t;p]
  (tb;fe_end)}
 
 prep.nlppre:{[t;p]
- fe_start:.zT;
+ fe_start:.z.T;
  tstr:.ml.i.fndcols[t;"C"];
- tnorm:prep.normalcreate[(tstr)_ t;p];
+ sp:.p.import[`spacy];
+ dr:.p.import[`builtins][`:dir];
+ pos:dr[sp[`:parts_of_speech]]`;
+ unipos:`$pos[til (first where 0<count each pos ss\:"__")];
+ myparser:.nlp.newParser[`en;`isStop`uniPOS];
+ corpus:myparser raze t[tstr];
+ tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
+ sentt:.nlp.sentiment each raze t[tstr];
+ tb:tpos,'sentt;
+ tb[`isStop]:{sum[x]%count x}each corpus`isStop;
+ tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
+ tb:$[0<count cols[t] except tstr;t,'(prep.normalcreate[tb,'(tstr)_t;p])[0];t,'(prep.normalcreate[tb;p])[0]];
  fe_end:.z.T-fe_start;
- ((tb;tnorm[0]);fe_end)}
-
+ (tb;fe_end)}

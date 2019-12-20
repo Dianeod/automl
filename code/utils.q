@@ -103,7 +103,7 @@ i.scorepred:{[data;bmn;mdl;scf;fnm]
   scf[;data 3]pred
   }
 
-i.scoreprednlp:{[data;bmn;mdl;scf;fnm]
+i.scoreprednlp:{[data;bmn;mdl;fnm]
   pred:$[bmn in i.nlplist,i.keraslist;
          // Formatting of first param is a result of previous implementation choices
          get[".aml.",fnm,"predictprob"][(0n;(data 2;0n));mdl];
@@ -141,9 +141,8 @@ i.models:{[ptyp;tgt;p]
   if[cl:ptyp in `class;
     // For classification tasks remove inappropriate classification models
     m:$[2<count distinct tgt;
-        delete from m where typ in `binary`nlp;
+        delete from m where typ in `binary;
         delete from m where model in `MultiKeras]];
-  if[cl&3~p`saveopt;m:delete from m where fnc=`svm];
   // Add a column with appropriate initialized models for each row
   m:update minit:.aml.proc.i.mdlfunc .'flip(lib;fnc;model)from m;
   // Threshold models used based on unique target values
@@ -162,7 +161,7 @@ i.updmodels:{[mdls;tgt]
 // has yet to be implemented
 i.keraslist:`RegKeras`MultiKeras`BinaryKeras
 i.nlplist:`Bert`RoBERTa`XLNet`XLM`DistilBERT`ALBERT`CamenBERT
-i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression;
+i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression`Combination;
 
 // Dictionary with mappings for console printing to reduce clutter in .aml.runexample
 i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save`nlpsco!
@@ -273,7 +272,6 @@ i.nlpproc:{[t;p;fp]
  tb[`isStop]:{sum[x]%count x}each corpus`isStop;
  flip tb[p`features]}
   
-
 // Extract the table that is to be used for the application of 
 // functions with(out) parameters to individual columns in a table
 /* efeat = extracted features we want to build a new table from

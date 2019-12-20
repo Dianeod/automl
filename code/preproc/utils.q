@@ -25,7 +25,9 @@ prep.i.autotype:{[t;typ;p]
       // restore the aggregating columns 
       tb:flip (l!t l,:()),cls!t cls;
       prep.i.errcol[cols t;cols tb;typ]];
-    typ in`nlpvect`nlppretrain;tb:t;
+    typ in`nlpvect`nlppretrain;
+      [cls:.ml.i.fndcols[t;"sfihjbepmdznuvtC"];
+       tb:flip cls!t cls;prep.i.errcol[cols t;cls;typ]];
     '`$"This form of feature extraction is not currently supported"];
   tb}
 
@@ -86,7 +88,7 @@ prep.i.symencode:{[t;n;b;p;enc]
           ` in enc`freq;.ml.onehot[t;enc`ohe];
           ` in enc`ohe;raze .ml.freqencode[;enc`freq]each flip each 0!p[`aggcols]xgroup t;
           t];
-        `normal~p`typ;
+        p[`typ]in`nlppretrain`normal;
         $[all {not ` in x}each value enc;
           .ml.onehot[.ml.freqencode[t;enc`freq];enc`ohe];
           ` in enc`freq;.ml.onehot[t;enc`ohe];

@@ -32,6 +32,7 @@ proc.i.updmodels:{[mdls;tgt]
     -1"No longer running neural nets or svms\n";
     select from mdls where(lib<>`keras),not fnc in`neural_network`svm];mdls]}
 
+proc.i.imax:{x?max x}
 
 // Utilities for xvgs.q
 
