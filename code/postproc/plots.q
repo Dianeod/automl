@@ -24,9 +24,9 @@ post.combfeatureimpact:{[bs;mdl;data;cnm;scf;dt;fp;p]
   normdata[2]:normdata[2][;inorm];
   r1:post.i.predshuff[bs[0];mdl[0;0],enlist last mdl;normdata;scf;;p`seed]each til count inorm;
   r2:post.i.predshuff[bs[1];mdl[0;1],enlist last mdl;nlpdata;scf;;p`seed]each til count inlp;
-  ord:proc.i.ord scf;
+  ord:proc.i.ord scf; 
   im:post.i.impact[r1;cnm[inorm];ord],post.i.impact[r2;cnm[inlp];ord];
-  post.i.impactplot[im;bs:`$"_" sv string bs;dt;fp];
+  post.i.impactplot[im;bs:`$"_"sv string bs;dt;fp];
   -1"\nFeature impact calculated for features associated with ",string[bs]," model";
   -1 "Plots saved in ",fp[1][`images],"\n";}
 

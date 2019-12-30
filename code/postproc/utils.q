@@ -145,11 +145,12 @@ post.i.roccurve:{[tgt;prob;dt;fpath]
 /* xvgs  = list of information about the models used and scores achieved for xval and grid-search
 /. r     > dictionary with the appropriate information added
 post.i.reportdict:{[cfeat;bm;tm;dt;path;xvgs;fpath]
+  bm[1]:$[2~count first key bm 0;"_" vs string bm 1;string bm 1];
   dd:(0#`)!();
   select
     feats    :cfeat,
     dict     :bm 0,
-    impact   :(fpath[0][`images],"Impact_Plot_",string[bm 1],".png"),
+    impact   :(fpath[0][`images],"Impact_Plot_",bm[1],".png"),
     holdout  :bm 2,
     xvtime   :bm 3,
     bmtime   :bm 4,
