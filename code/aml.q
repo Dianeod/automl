@@ -55,14 +55,14 @@ runexample:{[tb;tgt;ftype;ptype;p]
   bm:proc.runmodels[xtrn;ytrn;mdls;cols tts`xtrain;dict;dtdict;spaths];
   fn:i.scfn[dict;mdls];
   // Do not run grid search on deterministic models returning score on the test set and model
+  // If Combination model, run predictions on both character and normal columns test set
   if[comb:2~count bm[1];
   data:((xtrn[;inorm];ytrn;xtst[;inorm:where not 10h=type each first xtrn];ytst);
         (xtrn[;inlp];ytrn;xtst[;inlp:where 10h=type each first xtrn];ytst));
    funcnm:string exec fnc from mdls where model in bm[1];
    score:fn[;ytst]proc.i.imax each avg i.scoreprednlp'[data;bm[1];expmdl:last bm;funcnm]];
-  if[a:bm[1]in i.excludelist;
-    inds:$[not bm[1] in i.nlplist;where not 10h=type each first xtrn;where 10h=type each first xtrn];
-    data:(xtrn[;inds];ytrn;xtst[;inds];ytst);
+  if[a:all bm[1]in i.excludelist;
+    data:(xtrn[;inds];ytrn;xtst[;inds:where $[bm[1]in i.nlplist;;not]10h=type each first xtst];ytst);
     funcnm:string first exec fnc from mdls where model=bm[1];
     -1 i.runout`ex;score:i.scorepred[data;bm[1];expmdl:last bm;fn;funcnm]];
   // Run grid search on the best model for the parameter sets defined in hyperparams.txt
@@ -70,7 +70,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
     -1 i.runout`gs;
     prms:proc.gs.psearch[xtrn[;inds];ytrn;xtst[;inds:where not 10h=type each first xtst];ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
-  if[(`nlppretrain~ftype)&`Combination<>first key bm[0];$[bm[1] in i.nlplist;
+  if[(`nlppretrain~ftype)&`Combination<>first key bm[0];$[bm[1]in i.nlplist;
      cbt:count feats:strcol;(cbt:count feats except strcol;feats:feats except strcol)]];
   // Save down a pdf report summarizing the running of the pipeline
   if[dict[`saveopt] in 2;

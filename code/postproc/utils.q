@@ -145,7 +145,7 @@ post.i.roccurve:{[tgt;prob;dt;fpath]
 /* xvgs  = list of information about the models used and scores achieved for xval and grid-search
 /. r     > dictionary with the appropriate information added
 post.i.reportdict:{[cfeat;bm;tm;dt;path;xvgs;fpath]
-  bm[1]:$[2~count first key bm 0;"_" vs string bm 1;string bm 1];
+  bm[1]:$[2~count 0N!bm 2;"_" vs string bm 1;string bm 1];
   dd:(0#`)!();
   select
     feats    :cfeat,
