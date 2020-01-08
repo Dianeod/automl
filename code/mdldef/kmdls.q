@@ -41,10 +41,10 @@ mdl:{[d;s;mtype]
 
 nlpmdl:{[dict;mdl]
  args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!
-  (1b;0b;path,"/",(dict`spath),"/nlpmodel/",string[lower mdl];path,"/outputs/cache_dir_new";1b;0b);
+  (1b;0b;path,"/",dict[`spath],"/nlpmodel/",string[lower mdl];(cachedr:path,"/",dict[`spath]),"/cache_dir";1b;1b);
  args,:dict`args;
  modeln:$[`best_model in key dict;path,"/",(dict`spath),"/nlpmodel/",string[lower mdl];nlpdict[mdl]];
- if[not`cache_dir in key hsym`$path,"/outputs";system "mkdir -p ",path,"/outputs/cache_dir"];
+ if[not`cache_dir in key hsym`$cachedr;system "mkdir -p ",cachedr,"/cache_dir"];
  pydict:`model_type`model_name`use_cuda`num_labels`args!
         (lower mdl;modeln;0b;dict`tgtnum;args);
  m:get[".aml.nlp",string[dict`ptyp]][pykwargs pydict];m}

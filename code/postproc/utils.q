@@ -9,6 +9,22 @@
 
 // Utilities for available plotting functionality
 
+// Get impact score for each column
+/* bs   = name of the best mode
+/* mdl   = mixed list containing as first element the name of the best model
+/*        and second element the table of all possible models
+/* data = mixed list of (xtrn;ytrn;xtst;ytst)
+/* scf  = scoring function
+/* cr   = column/row number depending on table/matrix
+/* p    = parameter set
+/* b    = boolean indicating the type of data used
+/. r   > a dictionary mapping the feature impact to associated column/row
+post.imp:{[bs;mdl;data;cnm;scf;p;b]
+ data[0 2]:flip each flip data[0 2]@\:'/:inds:where $[b;;not]10h=type each first data[0];
+ r:post.i.predshuff[bs[b&n];mdl[b&n:count[bs]-1];data;scf;;p`seed]each til count inds;
+ ord:proc.i.ord scf;
+ post.i.impact[r;cnm[inds];ord]}
+
 // Python functionality
 plt:.p.import`matplotlib.pyplot;
 
@@ -24,13 +40,6 @@ post.i.shuffle:{[tm;c]
 // Predict output from models after shuffling
 // this function should be improved, limitations are arising due to the
 // number of available arguments to .aml.post.featureimpact 
-/* bs   = name of the best mode
-/* mdl   = mixed list containing as first element the name of the best model
-/*        and second element the table of all possible models
-/* data = mixed list of (xtrn;ytrn;xtst;ytst)
-/* scf  = scoring function
-/* cr   = column/row number depending on table/matrix
-/* p    = parameter set
 /. r    > score of the model with one column/row shuffled 
 post.i.predshuff:{[bs;mdl;data;scf;cr;p]
   epymdl:mdl[0];mdltb:mdl[1];
@@ -145,7 +154,7 @@ post.i.roccurve:{[tgt;prob;dt;fpath]
 /* xvgs  = list of information about the models used and scores achieved for xval and grid-search
 /. r     > dictionary with the appropriate information added
 post.i.reportdict:{[cfeat;bm;tm;dt;path;xvgs;fpath]
-  bm[1]:$[2~count 0N!bm 2;"_" vs string bm 1;string bm 1];
+  bm[1]:$[2~count bm 1;"_" sv string bm 1;string bm 1];
   dd:(0#`)!();
   select
     feats    :cfeat,

@@ -1,4 +1,4 @@
-/d .aml
+\d .aml
 
 // The following aspects of the naming parameter naming are used throughout this file
 /* t   = data as table
@@ -80,34 +80,25 @@ i.getdict:{[nm]
 i.freshdefault:{`aggcols`params`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ({first cols x};`.ml.fresh.params;(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;
    `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.ttsnonshuff;0.2)}
-i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`spath!
+i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2;"")}
-i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`spath!
+   `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
+i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp!
   (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.xv.fitpredict;`class`multiclass`multilabel!(`.ml.accuracy;`.ml.accuracy;`.aml.i.multiaccuracy);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass;"outputs")}
+   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass)}
 
 // Apply an appropriate scoring function to predictions from a model
-/* xtst = test data
-/* ytst = test target
+/* data = train and test data
 /* mdl  = fitted embedPy model object/function to be applied
 /* bmn  = best model name (symbol)
-/* scf  = scoring function which determines best model
 /* fnm  = name of the base representation of the function to be applied (reg/multi/bin)
-/. r    > score for the model based on the predictions on test data
-i.scorepred:{[data;bmn;mdl;scf;fnm]
-  pred:$[bmn in i.nlplist,i.keraslist;
+/* b    = boolean indicating to return prediction or prediction probabilities
+/. r    > predictions(probabilities) on test data
+i.scorepred:{[data;bmn;mdl;fnm;b]
+  $[bmn in i.nlplist,i.keraslist;
          // Formatting of first param is a result of previous implementation choices
-         get[".aml.",fnm,"predict"][(0n;(data 2;0n));mdl];
-         mdl[`:predict][data 2]`];
-  scf[;data 3]pred
-  }
-
-i.scoreprednlp:{[data;bmn;mdl;fnm]
-  pred:$[bmn in i.nlplist,i.keraslist;
-         // Formatting of first param is a result of previous implementation choices
-         get[".aml.",fnm,"predictprob"][(0n;(data 2;0n));mdl];
-         mdl[`:predict_proba][data 2]`]
+         get[".aml.",fnm,$[b;"predict";"predictprob"]][(0n;(data 2;0n));mdl];
+         mdl[$[b;`:predict;`:predict_proba]][data 2]`]
   }
 
 /  save down the best model
@@ -129,7 +120,7 @@ i.savemdl:{[bmn;bmo;mdls;nms]
  }
 
 // Table of models appropriate for the problem type being solved
-/* ptyp = problem type as a symbol, either `class or `reg, `multiclass`multilabel for nlp
+/* ptyp = problem type as a symbol, either `class or `reg
 /. r   > table with all information needed for appropriate models to be applied to data
 i.models:{[ptyp;tgt;p]
   if[not ptyp in key proc.i.files;'`$"text file not found"];
@@ -138,11 +129,11 @@ i.models:{[ptyp;tgt;p]
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
-  if[cl:ptyp in `class;
+  if[ptyp=`class;
     // For classification tasks remove inappropriate classification models
     m:$[2<count distinct tgt;
-        delete from m where typ in `binary;
-        delete from m where model in `MultiKeras]];
+        delete from m where typ=`binary;
+        delete from m where model=`MultiKeras]];
   // Add a column with appropriate initialized models for each row
   m:update minit:.aml.proc.i.mdlfunc .'flip(lib;fnc;model)from m;
   // Threshold models used based on unique target values
@@ -164,7 +155,7 @@ i.nlplist:`Bert`RoBERTa`XLNet`XLM`DistilBERT`ALBERT`CamenBERT
 i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression`Combination;
 
 // Dictionary with mappings for console printing to reduce clutter in .aml.runexample
-i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save`nlpsco!
+i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save!
  ("\nThe following is a breakdown of information for each of the relevant columns in the dataset\n";
   "\nData preprocessing complete, starting feature creation";
   "\nFeature creation and significance testing complete";
@@ -173,8 +164,7 @@ i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save`nlpsco!
   "Continuing to final model fitting on holdout set";
   "Continuing to grid-search and final model fitting on holdout set";
   "\nBest model fitting now complete - final score on test set = ";
-  "Saving down procedure report to ";
-  "Fitting for combined best model now complete - final score of test set = ")
+  "Saving down procedure report to ")
 
 
 // Save down the metadata dictionary as a binary file which can be retrieved by a user or
@@ -206,7 +196,7 @@ i.getmeta:{[fp]
 i.normalproc:{[t;p]
   t:i.rmvunder t;
   prep.i.autotype[t;p`typ;p];
-  // Symbol encoding completed based on encoding applied in a previous 'run'
+  // symbol encoding completed based on encoding applied in a previous 'run'
   t:prep.i.symencode[t;10;0;p;p`symencode];
   t:prep.i.nullencode[t;med];
   t:.ml.infreplace[t];
@@ -330,6 +320,30 @@ i.pathconstruct:{[dt;svo]
   (names!paths;names!{count[path]_x}each paths)
   }
 
+// Loads model saved from run and returns predictions for new data
+/* md       = model to be used and python library it belongs to
+/* metadata = metadata dictionary 
+/* data     = new data to get predictions on
+/* fp       = filepath
+/* b        = boolean indicating to return prediction or prediction probabilities
+/. r        > prediction(probabilities) for new data
+i.procmodel:{[md;metadata;data;fp;b]
+  // Relevant python functionality for loading of models
+    skload:.p.import[`joblib][`:load];
+    krload:.p.import[`keras.models][`:load_model];
+    $[(mp:first md 1)in`sklearn`keras;
+    // Apply the relevant saved down model to new data
+    [fp_upd:i.ssrwin[path,"/outputs/",fp,"/models/",string md 0];
+     if[bool:(mdl:md 0)in i.keraslist;fp_upd,:".h5"];
+     model:$[mp~`sklearn;skload;krload]fp_upd;
+     $[bool;[fnm:neg[5]_string lower mdl;get[".aml.",
+       fnm,$[b;"predict";"predictprob"]][(0n;(data;0n));model]];
+       model[[$[b;`:predict;`:predict_proba]];<]data]];
+     mp~`simpletransformers;[model:nlpmdl[metadata;md 0];
+      $[b;first;last]model[`:predict;<]data];
+      '`$"The current model type you are attempting to apply is not currently supported"]
+   }
+
 
 // Util functions used in multiple util files
 
@@ -341,8 +355,7 @@ i.errtgt:{[mdls]
 
 // Extract the scoring function to be applied for model selection
 /. r    > the scoring function appropriate to the problem being solved
-i.scfn:{[p;mdls]p[`scf]$[`nlp in distinct mdls`fnc;p`ptyp;
-        `reg in distinct mdls`typ;`reg;`class]}
+i.scfn:{[p;mdls]p[`scf]$[`reg in distinct mdls`typ;`reg;`class]}
 
 // Check if MultiKeras model is to be applied and each target exists in both training and testing sets
 /* tts  = train-test split dataset
@@ -361,12 +374,3 @@ i.ssrwin:{[path]$[.z.o like "w*";ssr[path;"/";"\\"];path]}
 // data can make use of functions that speed up execution of feature extraction
 /. r > table with columns renamed appropriately
 i.rmvunder:{[t](`$ssr[;"_";""]each string cols t) xcol t}
-
-// metrics for nlp multilabel models 
-i.precision_microavg:{.ml.precision[raze x;raze y;1b]}
-i.sensitivity_microavg:{.ml.sensitivity[raze x;raze y;1b]}
-
-i.macroavg:{(sum z[;;1b]'[flip x;flip y])%count first x}
-i.precision_macroavg:{i.macroavg[x;y;.ml.precision]}
-i.sensitivity_macroavg:{i.macroavg[x;y;.ml.sensitivity]}
-i.multiaccuracy:{avg .ml.accuracy[x;y]}

@@ -34,6 +34,31 @@ proc.i.updmodels:{[mdls;tgt]
 
 proc.i.imax:{x?max x}
 
+// Train data on best model and test on testing set
+/* bs   = best model, as a string, to be applied
+/* tt   = train and test data
+/* mdls = table of models that can be applied
+/* p    = parameter dictionary passed as default or modified by user
+/* b    = boolean indicating whether to return predictions or predicted probabilities for each class
+/. r    > the predictions(probabilitites), trained model, indices of data columns to be used
+proc.i.mdls:{[bs;tt;mdls;p;b]
+    // Get appropriate data columns for nlp or normal models
+    tt[`xtrain]:tt[`xtrain][;inds:where $[bs in i.nlplist;;not]10h=type each first tt`xtrain];
+    tt[`xtest]:tt[`xtest][;inds];
+    data:((xtrn:tt`xtrain;ytrn:tt`ytrain);(xtst:tt`xtest;ytst:tt`ytest));
+    $[bs in i.keraslist;
+    [funcnm:string first exec fnc from mdls where model=bs;
+     if[funcnm~"multi";data[;1]:npa@'reverse flip@'./:[;((::;0);(::;1))](0,count ytst)_/:
+       value .ml.i.onehot1(,/)(ytrn;ytst)];
+     kermdl:mdl[data;p`seed;`$funcnm];bm:fit[data;kermdl];
+     s2:get[".aml.",funcnm,$[b;"predict";"predictprob"]][data;bm]];
+     bs in i.nlplist;[kermdl:nlpmdl[p;bs];bm:nlpfit[data;kermdl];
+     s2:$[b;nlppredict;nlppredictprob][data;bm]];
+    [bm:(first exec minit from mdls where model=bs)[][];
+     bm[`:fit][xtrn;ytrn];s2:bm[$[b;`:predict;`:predict_proba]][xtst]`]
+    ];(s2;bm;inds)}
+
+
 // Utilities for xvgs.q
 
 // parse the hyperparameter flatfile

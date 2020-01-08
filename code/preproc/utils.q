@@ -13,7 +13,7 @@
 
 // Automatic type checking
 /. r   > the table with acceptable types only and error message with removed columns named
-prep.i.autotype:{[t;typ;p] 
+prep.i.autotype:{[t;typ;p]
   $[typ in `tseries`normal;
     [cls:.ml.i.fndcols[t;"sfihjbepmdznuvt"];
       tb:flip cls!t cls;
@@ -39,7 +39,7 @@ prep.i.describe:{[t]
   timecols:.ml.i.fndcols[t;"pmdznuvt"];
   boolcols:.ml.i.fndcols[t;"b"];
   catcols :.ml.i.fndcols[t;"s"];
-  textcols:.ml.i.fndcols[t;"c"];
+  textcols:.ml.i.fndcols[t;"cC"];
   num  :prep.i.metafn[t;numcols ;(count;{count distinct x};avg;sdev;min;max;{`numeric})];
   symb :prep.i.metafn[t;catcols ;prep.i.nonnumeric[{`categorical}]];
   times:prep.i.metafn[t;timecols;prep.i.nonnumeric[{`time}]];
