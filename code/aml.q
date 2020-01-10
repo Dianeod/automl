@@ -69,7 +69,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
     -1 i.runout`gs;
     prms:proc.gs.psearch[xtrn[;inds];ytrn;xtst[;inds:bm[6]];ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
-  if[nlptyp&`Combination<>first key bm[0];$[bm[1]in i.nlplist;
+  if[nlptyp&1~count bm[1];$[bm[1]in i.nlplist;
      cbt:count feats:strcol;(cbt:count feats except strcol;feats:feats except strcol)]];
   // Save down a pdf report summarizing the running of the pipeline
   if[dict[`saveopt] in 2;

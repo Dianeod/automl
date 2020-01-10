@@ -83,9 +83,9 @@ i.freshdefault:{`aggcols`params`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
 i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
-i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp!
+i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`runcomb!
   (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.xv.fitpredict;`class`multiclass`multilabel!(`.ml.accuracy;`.ml.accuracy;`.aml.i.multiaccuracy);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass)}
+   `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass;0b)}
 
 // Apply an appropriate scoring function to predictions from a model
 /* data = train and test data

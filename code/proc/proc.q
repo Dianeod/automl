@@ -23,7 +23,7 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
   // Score the models based on user denoted scf and ordered appropriately to find best model
   s1:ord mdls[`model]!{first avg x}each scf .''p1;
   // If nlpretrain run Combination of best "normal" and "nlp" model
-  if[`nlppretrain~p`typ;combmdl:key[s1](where each (not kk;kk:key[s1] in i.nlplist))[;0];
+  if[(`nlppretrain~p`typ)&1b~p`runcomb;combmdl:key[s1](where each (not kk;kk:key[s1] in i.nlplist))[;0];
     p2:proc.xv.seed[tt`xtrain;tt`ytrain;p,(`xv`prf!((`.ml.xv.kfshuff;2);`.aml.xv.fitpredictprob))]'
     [select from mdls where model in combmdl];
    s1:ord s1,enlist[comb:`$"Comb:","_" sv string combmdl]!enlist avg scf'[proc.i.imax''[avg first''[p2]];first last''[p2]]];

@@ -94,7 +94,8 @@ post.report:{[dict;dt;fname]
   cell[pdf;bmtime];
   line[pdf;7];
 
-  if[not (first key[dict`dict])in i.excludelist;
+ 
+  if[not (mdlkey in i.excludelist)|"Comb"~4#string mdlkey:first key[dict`dict];
     font[pdf;13;`B];
     gstitle:"Grid search for a ",(string first key[dict`dict])," model.";
     cell[pdf;gstitle];
