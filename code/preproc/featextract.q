@@ -33,7 +33,6 @@ prep.freshsignificance:{[t;tgt]
 /. r > table with features created in accordance with the normal feature creation procedure 
 prep.normalcreate:{[t;p]
   fe_start:.z.T;
-  t:(`$ssr[;"_";""]each string cols t)xcol t;
   // Time columns are extracted such that constituent parts can be used 
   // but are not transformed according to remaining procedures
   tcols:.ml.i.fndcols[t;"dmntvupz"];

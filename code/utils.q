@@ -127,7 +127,7 @@ i.savemdl:{[bmn;bmo;mdls;nms]
 i.models:{[ptyp;tgt;p]
   if[not ptyp in key proc.i.files;'`$"text file not found"];
   d:proc.i.txtparse[ptyp;"/code/mdldef/"];
-  if[`nlp~p`typ;d,:proc.i.txtparse[`multiclass;"/code/mdldef/"]];
+  if[`nlp~p`typ;d,:proc.i.txtparse[`nlpclass;"/code/mdldef/"]];
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
@@ -181,8 +181,7 @@ i.savemeta:{[d;dt;fpath]
   $[first[string .z.o]in "lm";
     system"mv metadata ",;
     system"move metadata ",]fpath[0]`config;
-  -1"Saving down model parameters to ",fpath[1]`config;
-   fpath[1]`config}
+  -1"Saving down model parameters to ",fpath[1]`config;}
 
 // Retrieve the metadata information from a specified path
 /* fp = full file path denoting the location of the metadata to be retrieved
@@ -196,7 +195,6 @@ i.getmeta:{[fp]
 // Apply feature creation and encoding procedures for 'normal' on new data
 /. r > table with feature creation and encodings applied appropriately
 i.normalproc:{[t;p]
-  t:i.rmvunder t;
   prep.i.autotype[t;p`typ;p];
   // symbol encoding completed based on encoding applied in a previous 'run'
   t:prep.i.symencode[t;10;0;p;p`symencode];
@@ -204,8 +202,7 @@ i.normalproc:{[t;p]
   t:.ml.infreplace[t];
   t:first prep.normalcreate[t;p];
   flip value flip p[`features]#t}
-  
-
+ 
 // Apply feature creation and encoding procedures for FRESH on new data
 /. r > table with feature creation and encodings applied appropriately
 i.freshproc:{[t;p]
@@ -217,7 +214,6 @@ i.freshproc:{[t;p]
   appfns:1!select from 0!.ml.fresh.params where f in funcs;
   // apply symbol encoding based on a previous run of automl
   t:prep.i.symencode[t;10;0;p;p`symencode];
-  t:i.rmvunder t;
   cols2use:k where not (k:cols t)in agg;
   t:prep.i.nullencode[value .ml.fresh.createfeatures[t;agg;cols2use;appfns];med];
   t:.ml.infreplace t;
@@ -252,54 +248,14 @@ i.nlppreproc:{[t;p]
   tb:prep.nlppre[t;p];
   flip tb[0][p`features]}
  
-// Extract the table that is to be used for the application of 
-// functions with(out) parameters to individual columns in a table
-/* efeat = extracted features we want to build a new table from
-/* cvals = columns of the original table
-/. r   > a table with the function and parameter information to be applied to tabular columns
-i.freshecols:{[efeat;cvals]
-  // Separate the column names for use in extracting features appropriately
-  sepcols:`$i.separ[efeat];
-  // Extract the required original table column name
-  coln:cvals where cvals in sepcols;
-  // Extract function and hyper parameters from the extracted feature names
-  fncparams:sepcols except coln;
-  // Extract function name
-  fnc:first fncparams;
-  $[0<.ml.fresh.params[fnc]`pnum;
-    [params:1_fncparams;
-     // For a given function extract the location of parameter names
-     ploc:where params in .ml.fresh.params[fnc]`pnames;
-     // The string representation of hyperparameter values
-     pv:string params ploc+1;
-     // Find all locations that need to be converted to floats
-     pvloc:where sum("o";"w")in/:\:pv;
-     paramv:enlist each"J"$pv;
-     // Extract the floating point representation of relevant parameters
-     paramv[pvloc]:enlist each"F"$ssr[;"o";"."]each pv[pvloc]];
-     (paramn:();paramv:())];
-  `coln`f`pnum`pnames`pvals`valid!(coln;fnc;count[ploc];params ploc;paramv;1b)}
-
-// Extract the columns that are to be applied for nlp preprocessing
-/. r > table with feature creation and encodings applied appropriately
- 
-
-/. r   > a table with the function and parameter information to be applied to normal tabular columns
-i.normecols:{[efeat;cvals]
-  coln:cvals where cvals in cname:`$i.separ[efeat];
-  `coln`fnc!(coln;$[count[coln]~count[cname];`norm;last cname])
-  }
-
-i.separ:{"_" vs string x}
-
 // Create the folders that are required for the saving of the config,models, images and reports
 /* dt  = date and time dictionary denoting the start of a run
 /* svo = save option defined by the user, this can only be 1/2 in this case
 /. r   > the file paths in its full format or truncated for use in outputs to terminal
 i.pathconstruct:{[dt;svo]
-  names:$[svo=4;`norm`nlp;`config`models];
-  if[svo in 2 3;names:names,`images`report]
-  pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",$[not 10h~type x[`pt];y;x[`pt],"/",y],"/";":";"."]};
+  names:`config`models;
+  if[svo=2;names:names,`images`report]
+  pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",y,"/";":";"."]};
   paths:path,/:pname[dt]each string names;
   paths:i.ssrwin[paths];
   {[fnm]system"mkdir",$[.z.o like "w*";" ";" -p "],fnm}each paths;

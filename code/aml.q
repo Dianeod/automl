@@ -12,15 +12,13 @@
 
 run:{[tb;tgt;ftype;ptype;p]
   dtdict:`stdate`sttime!(.z.D;.z.T);
-  if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
-  if[nlptyp:`nlp~ftype;dict[`tgtnum`ptyp]:$[ptype~`class;(count distinct tgt;ptype);(count tgt[1];ptype)]];
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
-  if[sopt:dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[sopt&ftype in`nlpvect`nlp;dict[`spath]:1_-8_last spaths`config];
+  if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
+  if[nlptyp:`nlp~ftype;dict[`tgtnum`spath]:(count distinct tgt;1_-8_last spaths`config)];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -48,7 +46,7 @@ run:{[tb;tgt;ftype;ptype;p]
   ytrn:tts`ytrain;ytst:tts`ytest;
   mdls:i.kerascheck[mdls;tts;tgt];
   // Check if Tensorflow/Keras not available for use, NN models removed
-  if[1~checkimport[];mdls:?[mdls;enlist(<>;`lib;enlist`keras);0b;()]];
+  if[1~checkimport[];mdls:?[mdls;enlist(<>;`lib;enlist `keras);0b;()]];
   -1 i.runout`sig;-1 i.runout`slct;-1 i.runout[`tot],string[ctb:count cols tab];
   // Run all appropriate models on the training set
   bm:proc.runmodels[xtrn;ytrn;mdls;cols tts`xtrain;dict;dtdict;spaths];
@@ -59,6 +57,8 @@ run:{[tb;tgt;ftype;ptype;p]
   data:((xtrn[;inorm];ytrn;xtst[;inorm:first bm[6]];ytst);
         (xtrn[;inlp];ytrn;xtst[;inlp:last bm[6]];ytst));
    funcnm:string exec fnc from mdls where model in bm[1];
+   if[not first[bm[1]]in i.excludelist;gsmdl:proc.gs.psearch[xtrn[;inorm];ytrn;xtst[;inorm];ytst;first bm[1];dict;ptype;mdls];
+       bm[7;0]:last gsmdl];
    score:fn[;ytst]proc.i.imax each avg i.scorepred'[data;bm[1];last bm;funcnm;00b];expmdl:first last bm];
   if[not[comb]&a:all bm[1]in i.excludelist;
     data:(xtrn[;inds];ytrn;xtst[;inds:bm[6]];ytst);
@@ -73,7 +73,7 @@ run:{[tb;tgt;ftype;ptype;p]
      [cbt:count feats:.ml.i.fndcols[tb 0;"C"];system["rm -r ",path,"/",dict[`spath],"/models"]];
      (cbt:count feats except strcol;feats:feats except strcol:.ml.i.fndcols[tb 0;"C"])]];
   // Save down a pdf report summarizing the running of the pipeline
-  if[dict[`saveopt] in 2;
+  if[2=dict[`saveopt];
     -1 i.runout[`save],spaths[1]`report;
     report_param:post.i.reportdict[ctb;bm;tb;dtdict;path;(prms 1;score;dict`xv;dict`gs);spaths];
     post.report[report_param;dtdict;spaths[0]`report]];

@@ -39,7 +39,7 @@ prep.i.describe:{[t]
   timecols:.ml.i.fndcols[t;"pmdznuvt"];
   boolcols:.ml.i.fndcols[t;"b"];
   catcols :.ml.i.fndcols[t;"s"];
-  textcols:.ml.i.fndcols[t;"cC"];
+  textcols:.ml.i.fndcols[t;"c"];
   num  :prep.i.metafn[t;numcols ;(count;{count distinct x};avg;sdev;min;max;{`numeric})];
   symb :prep.i.metafn[t;catcols ;prep.i.nonnumeric[{`categorical}]];
   times:prep.i.metafn[t;timecols;prep.i.nonnumeric[{`time}]];

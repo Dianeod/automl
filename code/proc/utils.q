@@ -8,17 +8,16 @@
 // Utilities for proc.q
 
 // Text files that can be parsed from within the mdldef folder
-proc.i.files:`class`reg`score`multilabel`multiclass!("classmodels.txt";"regmodels.txt";"scoring.txt";"nlpmodels.txt";"nlpmodels.txt")
+proc.i.files:`class`reg`score`nlpclass!("classmodels.txt";"regmodels.txt";"scoring.txt";"nlpmodels.txt")
 
 // Build up the model to be applied based on naming convention
 /* lib = library which forms the basis for the definition
 /* fnc = function name if keras or module from which model is derived for keras
 /. r   > the appropriate function or projection in the case of sklearn
 proc.i.mdlfunc:{[lib;fnc;mdl]
-  $[`keras~lib;
+  $[lib in `keras`simpletransformers;
     // retrieve keras model from the .aml namespace eg '.aml.regfitscore'
     get` sv``aml,`fitscore;
-    `simpletransformers~lib;get` sv``aml,`nlpfitscore;
     // construct the projection used for sklearn models eg '.p.import[`sklearn.svm][`:SVC]'
     {[x;y;z].p.import[x]y}[` sv lib,fnc;hsym mdl]]}
 
@@ -46,14 +45,13 @@ proc.i.mdls:{[bs;tt;mdls;p;b]
     tt[`xtrain]:tt[`xtrain][;inds:where $[bs in i.nlplist;;not]10h=type each first tt`xtrain];
     tt[`xtest]:tt[`xtest][;inds];
     data:((xtrn:tt`xtrain;ytrn:tt`ytrain);(xtst:tt`xtest;ytst:tt`ytest));
-    $[bs in i.keraslist;
-    [funcnm:string first exec fnc from mdls where model=bs;
-     if[funcnm~"multi";data[;1]:npa@'reverse flip@'./:[;((::;0);(::;1))](0,count ytst)_/:
+    $[bs in i.keraslist,i.nlplist;
+    [funcnm:select from mdls where model=bs;
+     fnctyp:$[mtyp:first funcnm[`model] in i.nlplist;".aml.nlp";".aml."];
+     if[funcnm[`typ]~"multi";data[;1]:npa@'reverse flip@'./:[;((::;0);(::;1))](0,count ytst)_/:
        value .ml.i.onehot1(,/)(ytrn;ytst)];
-     kermdl:mdl[data;p`seed;`$funcnm];bm:fit[data;kermdl];
-     s2:get[".aml.",funcnm,$[b;"predict";"predictprob"]][data;bm]];
-     bs in i.nlplist;[kermdl:nlpmdl[p;bs];bm:nlpfit[data;kermdl];
-     s2:$[b;nlppredict;nlppredictprob][data;bm]];
+     kermdl:get[`$fnctyp,"mdl"][p;funcnm;data];bm:get[`$fnctyp,"fit"][data;kermdl];
+     s2:get[`$fnctyp,string[first funcnm[`typ]],$[b;"predict";"predictprob"]][data;bm]];
     [bm:(first exec minit from mdls where model=bs)[][];
      bm[`:fit][xtrn;ytrn];s2:bm[$[b;`:predict;`:predict_proba]][xtst]`]
     ];(s2;bm;inds)}

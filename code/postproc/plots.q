@@ -10,6 +10,6 @@
 /* fp   = file path dictionaries with the full save path and subsection for printinga
 post.featureimpact:{[bs;mdl;data;cnm;scf;dt;fp;p]
   im:post.imp[bs;$[b;flip;enlist]mdl;data;cnm;scf;p;]each $[b:2~count bs;01b;bs[0] in i.nlplist;1b;0b];
-  post.i.impactplot[$[b;raze;]im;bs:$[b;`$"_"sv string bs;bs[0]];dt;fp];
+  post.i.impactplot[$[b;raze;]im;bs:$[b;`$"Comb_","_"sv string bs;bs[0]];dt;fp];
   -1"\nFeature impact calculated for features associated with ",string[bs]," model";
   -1 "Plots saved in ",fp[1][`images],"\n";}

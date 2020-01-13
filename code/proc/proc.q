@@ -1,4 +1,3 @@
-
 \d .aml
 
 // Run cross validated machine learning models on training data and choose the best model.
@@ -23,10 +22,10 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
   // Score the models based on user denoted scf and ordered appropriately to find best model
   s1:ord mdls[`model]!{first avg x}each scf .''p1;
   // If nlpretrain run Combination of best "normal" and "nlp" model
-  if[(`nlppretrain~p`typ)&1b~p`runcomb;combmdl:key[s1](where each (not kk;kk:key[s1] in i.nlplist))[;0];
+  if[(`nlp~p`typ)&1b~p`runcomb;combmdl:key[s2](where each (not kk;kk:key[s2:`SVC`LinearSVC _s1] in i.nlplist))[;0];
     p2:proc.xv.seed[tt`xtrain;tt`ytrain;p,(`xv`prf!((`.ml.xv.kfshuff;2);`.aml.xv.fitpredictprob))]'
     [select from mdls where model in combmdl];
-   s1:ord s1,enlist[comb:`$"Comb:","_" sv string combmdl]!enlist avg scf'[proc.i.imax''[avg first''[p2]];first last''[p2]]];
+   s1:ord s1,enlist[comb:`$"Comb_","_" sv string combmdl]!enlist avg scf'[proc.i.imax''[avg first''[p2]];first last''[p2]]];
   -1"\nScores for all models, using ",string scf;show s1;
   -1"\nBest scoring model = ",string bs:first key s1;
   xv_tend:.z.T-xv_tstart;
@@ -39,7 +38,7 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
   -1"Score for validation predictions using best model = ",string[s2:preds 0],"\n";
   bm_tend:.z.T-bm_tstart;
   // Feature impact graph produced on holdout data if setting is appropriate
-  if[p[`saveopt]~2;post.featureimpact[$[b;bs:combmdl;enlist bs];(bm:first preds 1;$[b;2#enlist mdls;mdls]);value tt;cnms;scf;dt;fpath;p]];
+  if[2=p[`saveopt];post.featureimpact[$[b;bs:combmdl;enlist bs];(bm:first preds 1;$[b;2#enlist mdls;mdls]);value tt;cnms;scf;dt;fpath;p]];
   // Outputs from run models. These are used in the generation of a pdf report
   // or are used within later sections of the pipeline.
   (s1;bs;s2;xv_tend;bm_tend;scf;last last preds;bm)}

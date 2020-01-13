@@ -120,7 +120,7 @@ post.i.impactplot:{[im;mdl;dt;fpath]
   ax[`:set_title]"Feature Impact: ",string mdl;
   ax[`:set_ylabel]"Columns";
   ax[`:set_xlabel]"Relative feature impact";
-  plt[`:savefig][fpath[0][`images],sv["_";string(`$"Impact_Plot";mdl)],".jpeg";`bbox_inches pykw"tight"];}
+  plt[`:savefig][fpath[0][`images],sv["_";string(`Impact_Plot;mdl)],".jpeg";`bbox_inches pykw"tight"];}
 
 // This function will be used to produce an ROC plot, this however necessitates the need for
 // predicted probabilities to be returned from the models which is not at present implemented

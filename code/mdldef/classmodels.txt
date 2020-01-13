@@ -5,5 +5,7 @@ LogisticRegression         | sklearn   ;   linear_model   ; seed ; binary
 GaussianNB                 | sklearn   ;   naive_bayes    ; ::   ; binary
 KNeighborsClassifier       | sklearn   ;   neighbors      ; ::   ; multi
 MLPClassifier              | sklearn   ;   neural_network ; seed ; multi
+SVC                        | sklearn   ;   svm            ; seed ; binary	
+LinearSVC                  | sklearn   ;   svm            ; seed ; binary
 BinaryKeras                | keras     ;   binary         ; seed ; binary
 MultiKeras                 | keras     ;   multi          ; seed ; multi
