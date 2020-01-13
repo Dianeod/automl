@@ -9,8 +9,7 @@
 // Create features using the FRESH algorithm
 /. r > table of fresh created features and the time taken to complete extraction as a mixed list
 prep.freshcreate:{[t;p]
-  t:(`$ssr[;"_";""]each string cols t)xcol t;
-  agg:p`aggcols;prm:get p`params;
+  agg:p`aggcols;prm:get p`funcs;
   // Feature extraction should be performed on all columns that are non aggregate
   cols2use:k where not (k:cols[t])in agg;
   fe_start:.z.T;
@@ -39,8 +38,7 @@ prep.normalcreate:{[t;p]
   // but are not transformed according to remaining procedures
   tcols:.ml.i.fndcols[t;"dmntvupz"];
   tb:(cols[t]except tcols)#t;
-  tb:prep.i.truncsvd[tb;::;2];
-  tb:prep.i.bulktransform[tb;::;key prep.i.bulkname;1b];
+  tb:prep.i.applyfn/[tb;p`funcs];
   tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
   // Apply the transform of time specific columns as appropriate
   if[0<count tcols;tb^:.ml.timesplit[tcols#t;::]];

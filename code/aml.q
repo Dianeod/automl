@@ -10,17 +10,17 @@
 /* ptype = type of problem regression/class (`reg/`class)
 /* p     = parameters (::) produces default other changes are user dependent
 
-runexample:{[tb;tgt;ftype;ptype;p]
+run:{[tb;tgt;ftype;ptype;p]
   dtdict:`stdate`sttime!(.z.D;.z.T);
   if[ftype~`fresh;tb:(`$ssr[;"_";""]each string cols tb)xcol tb];
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
-  if[nlptyp:`nlppretrain~ftype;dict[`tgtnum`ptyp]:$[ptype~`class;(count distinct tgt;ptype);(count tgt[1];ptype)]];
+  if[nlptyp:`nlp~ftype;dict[`tgtnum`ptyp]:$[ptype~`class;(count distinct tgt;ptype);(count tgt[1];ptype)]];
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[sopt:dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[sopt&ftype in`nlpvect`nlppretrain;dict[`spath]:1_-8_last spaths`config];
+  if[sopt&ftype in`nlpvect`nlp;dict[`spath]:1_-8_last spaths`config];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -32,10 +32,10 @@ runexample:{[tb;tgt;ftype;ptype;p]
   tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
       ftype=`normal;prep.normalcreate[tb;dict];
       ftype=`nlpvect;prep.nlpcreate[tb;dict];
-      ftype=`nlppretrain;prep.nlppre[tb;dict];
+      ftype=`nlp;prep.nlppre[tb;dict];
        '`$"Feature extraction type is not currently supported"];
   feats:prep.freshsignificance[tb 0;tgt];
-  if[nlptyp;feats,:.ml.i.fndcols[tb 0;"C"]];
+  if[nlptyp;feats:distinct feats,.ml.i.fndcols[tb 0;"C"]];
   // Encode target data if target is a symbol vector
   if[11h~type tgt;tgt:.ml.labelencode tgt];
   // Apply the appropriate train/test split to the data
@@ -70,7 +70,8 @@ runexample:{[tb;tgt;ftype;ptype;p]
     prms:proc.gs.psearch[xtrn[;inds];ytrn;xtst[;inds:bm[6]];ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
   if[nlptyp&1~count bm[1];$[bm[1]in i.nlplist;
-     cbt:count feats:strcol;(cbt:count feats except strcol;feats:feats except strcol)]];
+     [cbt:count feats:.ml.i.fndcols[tb 0;"C"];system["rm -r ",path,"/",dict[`spath],"/models"]];
+     (cbt:count feats except strcol;feats:feats except strcol:.ml.i.fndcols[tb 0;"C"])]];
   // Save down a pdf report summarizing the running of the pipeline
   if[dict[`saveopt] in 2;
     -1 i.runout[`save],spaths[1]`report;
@@ -91,8 +92,7 @@ runexample:{[tb;tgt;ftype;ptype;p]
 /* t = table of new data to be predicted
 /* fp = the path to the folder which the /Config and /Models folders are
 
-
-newproc:{[t;fp]
+new:{[t;fp]
   // Retrieve the metadata from a file path based on the run date/time
   metadata:i.getmeta[i.ssrwin[path,"/outputs/",fp,"/config/metadata"]];
   typ:metadata`typ;
@@ -102,7 +102,7 @@ newproc:{[t;fp]
     i.freshproc[t;metadata]; 
     `nlpvect=typ;
     i.nlpproc[t;metadata;path,"/outputs/",fp];
-    `nlppretrain=typ;$[metadata[`best_model] in i.nlplist;(ml.i.fndcols[t;"C"])#t;i.nlppreproc[t;metadata]];
+    `nlp=typ;$[metadata[`best_model] in i.nlplist;(ml.i.fndcols[t;"C"])#t;i.nlppreproc[t;metadata]];
     '`$"This form of operation is not currently supported"];
    $[2~count comb:`$"_" vs string metadata`best_model;imax each avg i.procmodel[;metadata;data;fp;0b]each flip(comb;metadata`pylib);
              i.procmodel[(metadata`best_model;metadata`pylib);metadata;data;fp;1b]]

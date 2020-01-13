@@ -38,7 +38,7 @@ i.updparam:{[t;p;typ]
 	   '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
 	   d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
-      typ in `nlpvect`nlppretrain;
+      typ in `nlpvect`nlp;
        {[t;p]d:i.nlpclassdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.aml.i.getdict p];
@@ -64,8 +64,10 @@ i.getdict:{[nm]
     $[`scf in k;`scf;()];
     $[`seed in k:key d;`seed;()]);
   fnc:(key;
-       {get string first x};{(x 0;get string x 1)};
-       {key[x]!`$value x};{$[`rand_val~first x;first x;get string first x]});
+    {get string first x};
+    {(x 0;get string x 1)};
+    {key[x]!`$value x};
+    {$[`rand_val~first x;first x;get string first x]});
   // Addition of empty dictionary entry needed as parsing 
   // of file behaves oddly if only a single entry is given to the system
   if[sgl:1=count d;d:(enlist[`]!enlist""),d];
@@ -77,14 +79,14 @@ i.getdict:{[nm]
 // or in the creation of a new initialisation parameter flat file
 /* Neither of these function take a parameter as input
 /. r > default dictionaries which will be used by the automl
-i.freshdefault:{`aggcols`params`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
+i.freshdefault:{`aggcols`funcs`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
   ({first cols x};`.ml.fresh.params;(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;
    `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.ttsnonshuff;0.2)}
-i.normaldefault:{`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
-  ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
-   `rand_val;2;0.2;`.ml.traintestsplit;0.2)}
-i.nlpclassdefault:{`args`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`runcomb!
-  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.xv.fitpredict;`class`multiclass`multilabel!(`.ml.accuracy;`.ml.accuracy;`.aml.i.multiaccuracy);
+i.normaldefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz!
+  ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.prep.i.default;`.aml.xv.fitpredict;
+   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2)}
+i.nlpclassdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`runcomb!
+  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.prep.i.bulktransform`.aml.prep.i.truncsvd;`.aml.xv.fitpredict;enlist[`class]!enlist`.ml.accuracy;
    `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass;0b)}
 
 // Apply an appropriate scoring function to predictions from a model
@@ -125,7 +127,7 @@ i.savemdl:{[bmn;bmo;mdls;nms]
 i.models:{[ptyp;tgt;p]
   if[not ptyp in key proc.i.files;'`$"text file not found"];
   d:proc.i.txtparse[ptyp;"/code/mdldef/"];
-  if[`nlppretrain~p`typ;d,:proc.i.txtparse[`multiclass;"/code/mdldef/"]];
+  if[`nlp~p`typ;d,:proc.i.txtparse[`multiclass;"/code/mdldef/"]];
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
@@ -200,24 +202,13 @@ i.normalproc:{[t;p]
   t:prep.i.symencode[t;10;0;p;p`symencode];
   t:prep.i.nullencode[t;med];
   t:.ml.infreplace[t];
-  t:(`$ssr[;"_";""]each string cols t)xcol t;
-  // Create the table needed to extract features on a column/function basis
-  normtab:i.normecols[;cols t]each p[`features];
-  // Names of all the columns which truncated singular value decomposition is applied
-  trunccol:exec coln from normtab where fnc=`trsvd;
-  t:prep.i.truncsvd[t;trunccol;::];
-  bulkt:select from normtab where not fnc in `norm`trsvd;
-  if[0<count[bulkt];
-    // new table denoting how new functions are to be applied to data
-    ntab:0!select coln by fnc from select fnc by coln from bulkt;
-    // perform transfomation as appropriate for each required bulk modification
-    t:(uj/){prep.i.bulktransform[y;x`coln;x`fnc;0b]}[;t]each ntab];
+  t:first prep.normalcreate[t;p];
   flip value flip p[`features]#t}
   
 
 // Apply feature creation and encoding procedures for FRESH on new data
 /. r > table with feature creation and encodings applied appropriately
-i.freshproc:{[t;p] 
+i.freshproc:{[t;p]
   t:prep.i.autotype[t;p`typ;p];
   agg:p`aggcols;pfeat:p`features;
   // extract relevant functions based on the significant features determined by the model
@@ -228,13 +219,8 @@ i.freshproc:{[t;p]
   t:prep.i.symencode[t;10;0;p;p`symencode];
   t:i.rmvunder t;
   cols2use:k where not (k:cols t)in agg;
-  // Create table denoting all functions to be applied to each column
-  appfncs:`coln xgroup distinct i.freshecols[;cols t]each p`features;
-  // Modified fresh feature creation for column by column extraction
-  fproc:{[x;y;z;r].ml.fresh.createfeatures[x;y;z;`f xkey flip r]};
-  // Feature creation applied on appropriate columns
-  t:prep.i.nullencode[0!(uj/)fproc[t;agg]'[(0!appfncs)`coln;value appfncs];med];
-  t:value agg xkey p[`features]xcols .ml.infreplace t;
+  t:prep.i.nullencode[value .ml.fresh.createfeatures[t;agg;cols2use;appfns];med];
+  t:.ml.infreplace t;
   // It is not guaranteed that new feature creation will produce the all requisite features 
   // if this is not the case dummy features are added to the data
   if[not all ftc:pfeat in cols t;
@@ -369,8 +355,3 @@ i.kerascheck:{[mdls;tts;tgt]
 /* path = the linux 'like' path
 /. r    > the path modified to be suitable for windows systems
 i.ssrwin:{[path]$[.z.o like "w*";ssr[path;"/";"\\"];path]}
-
-// Remove underscores from column names, this is needed to ensure that running on new 
-// data can make use of functions that speed up execution of feature extraction
-/. r > table with columns renamed appropriately
-i.rmvunder:{[t](`$ssr[;"_";""]each string cols t) xcol t}

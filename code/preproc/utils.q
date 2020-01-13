@@ -25,7 +25,7 @@ prep.i.autotype:{[t;typ;p]
       // restore the aggregating columns 
       tb:flip (l!t l,:()),cls!t cls;
       prep.i.errcol[cols t;cols tb;typ]];
-    typ in`nlpvect`nlppretrain;
+    typ in`nlpvect`nlp;
       [cls:.ml.i.fndcols[t;"sfihjbepmdznuvtC"];
        tb:flip cls!t cls;prep.i.errcol[cols t;cls;typ]];
     '`$"This form of feature extraction is not currently supported"];
@@ -55,7 +55,7 @@ prep.i.lencheck:{[t;tgt;typ;p]
       // Check that the number of unique aggregating sets is the same as number of targets
       if[count[tgt]<>count distinct $[1=count p`aggcols;t[p`aggcols];(,'/)t p`aggcols];
          '`$"Target count must equal count of unique agg values for fresh"];
-      typ in`tseries`normal`nlpvect`nlppretrain;
+      typ in`tseries`normal`nlpvect`nlp;
       if[count[tgt]<>count t;
          '`$"Must have the same number of targets as values in table"];
     '`$"Input for typ must be a supported type"];
@@ -88,7 +88,7 @@ prep.i.symencode:{[t;n;b;p;enc]
           ` in enc`freq;.ml.onehot[t;enc`ohe];
           ` in enc`ohe;raze .ml.freqencode[;enc`freq]each flip each 0!p[`aggcols]xgroup t;
           t];
-        p[`typ]in`nlppretrain`normal;
+        p[`typ]in`nlp`normal;
         $[all {not ` in x}each value enc;
           .ml.onehot[.ml.freqencode[t;enc`freq];enc`ohe];
           ` in enc`freq;.ml.onehot[t;enc`ohe];
@@ -109,40 +109,35 @@ prep.i.symencode:{[t;n;b;p;enc]
 
 // Utilities for feat_extract.q
 
-// Calculate the credibility score symbol columns based on target distribution in regression tasks
-/. r > the estimated credibility score appended as additional columns 
-prep.i.credibility:{[t;c;tgt]
-  if[(::)~c;c:.ml.i.fndcols[t;"s"]];
-  avgtot:avg tgt;
-  counts:{(count each group x)x}each t c,:();
-  // average target value for the each group
-  avggroup:{(key[k]!avg each y@value k:group x)x}[;tgt]each t c,:();
-  scores:{z*(x-y)}[avgtot]'[avggroup;counts];
-  names:(`$string[c],\:"_credibility_estimate");
-  x^flip names!scores}
-
-// Helper dictionaries for conversions involving bulk transformations
-prep.i.bulkname:`multi`sum`div`sub!("_multi";"_sum";"_div";"_sub")
-prep.i.bulkfnc:`multi`sum`div`sub! (prd;sum;{first(%)x};{last deltas x})
-
 // Perform bulk transformations of hij columns for all unique linear combinations of such columns
 /* fncs = functions to apply to the input columns
 /* b    = boolean indicating whether to make combinations of input columns
 /. r > table with bulk transformtions applied appropriately
-prep.i.bulktransform:{[t;c;fncs;b]
-  if[(::)~c;c:.ml.i.fndcols[t;"hij"]];
+prep.i.bulktransform:{[t]
+  c:.ml.i.fndcols[t;"hij"];
   // Name the columns based on the unique combinations
-  n:raze(,'/)`$("_"sv'string $[b;c@:.ml.combs[count c;2];c]),\:/:prep.i.bulkname[fncs];
+  n:raze(,'/)`$(raze each string c@:.ml.combs[count c;2]),\:/:("_multi";"_sum";"_div";"_sub");
   // Apply transforms based on naming conventions chosen and re-form the table with these appended
-  flip flip[t],n!(,/)(prep.i.bulkfnc[fncs])@/:\:t c}
+  flip flip[t],n!(,/)(prd;sum;{first(%)x};{last deltas x})@/:\:t c}
+
+// Used for the recursive application of functions to a kdb+ table
+/* fn = function to be applied to the table
+/* t  = table
+/. table with the desired transform applied
+prep.i.applyfn:{[t;fn]@[;t]$[-11h=type fn;get[fn];fn]}
 
 // Perform a truncated single value decomposition on unique linear combinations of float columns
 // https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html
-prep.i.truncsvd:{[t;c;p]
-  if[(::)~c;c:.ml.i.fndcols[t;"f"]];
-  $[(::)~p;c;c@:.ml.combs[count c,:();p]];
+prep.i.truncsvd:{[t]
+  c:.ml.i.fndcols[t;"f"];
+  c@:.ml.combs[count c,:();2];
   svd:.p.import[`sklearn.decomposition;`:TruncatedSVD;`n_components pykw 1];
   flip flip[t],(`$("_"sv'string c),\:"_trsvd")!{raze x[`:fit_transform][flip y]`}[svd]each t c}
+
+// Default behaviour for the system is to pass through the table without the application of
+// any feature extraction procedures, this is for computational efficiency in initial builds
+// of the system and may be augmented with a more intelligent system moving forward
+prep.i.default:{[t]t}
 
 // Error message related to the 'refusal' of the feature significance tests to 
 // find appropriate columns to explain the data from those produced
