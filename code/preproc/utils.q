@@ -110,8 +110,6 @@ prep.i.symencode:{[t;n;b;p;enc]
 // Utilities for feat_extract.q
 
 // Perform bulk transformations of hij columns for all unique linear combinations of such columns
-/* fncs = functions to apply to the input columns
-/* b    = boolean indicating whether to make combinations of input columns
 /. r > table with bulk transformtions applied appropriately
 prep.i.bulktransform:{[t]
   c:.ml.i.fndcols[t;"hij"];
@@ -132,7 +130,7 @@ prep.i.truncsvd:{[t]
   c:.ml.i.fndcols[t;"f"];
   c@:.ml.combs[count c,:();2];
   svd:.p.import[`sklearn.decomposition;`:TruncatedSVD;`n_components pykw 1];
-  flip flip[t],(`$("_"sv'string c),\:"_trsvd")!{raze x[`:fit_transform][flip y]`}[svd]each t c}
+  flip flip[t],(`$(raze each string c),\:"_trsvd")!{raze x[`:fit_transform][flip y]`}[svd]each t c}
 
 // Default behaviour for the system is to pass through the table without the application of
 // any feature extraction procedures, this is for computational efficiency in initial builds
@@ -143,6 +141,20 @@ prep.i.default:{[t]t}
 // find appropriate columns to explain the data from those produced
 prep.i.freshsigerr:"The feature significance extraction process deemed none of the features ",
   "to be important continuing anyway"
+
+prep.i.nlpfeats:{[t]
+ tstr:.ml.i.fndcols[t;"C"];
+ sp:.p.import[`spacy];
+ dr:.p.import[`builtins][`:dir];
+ pos:dr[sp[`:parts_of_speech]]`;
+ unipos:`$pos[til (first where 0<count each pos ss\:"__")];
+ myparser:.nlp.newParser[`en;`isStop`uniPOS];
+ corpus:myparser raze t[tstr];
+ tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
+ sentt:.nlp.sentiment each raze t[tstr];
+ tb:tpos,'sentt;
+ tb[`isStop]:{sum[x]%count x}each corpus`isStop;
+ .ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med]}
 
 
 // Utils.q utilities
@@ -163,6 +175,3 @@ prep.i.metafn:{[t;sl;fl]$[0<count sl;fl@\:/:flip(sl)#t;()]}
 
 // List of functions to be applied in metadata function for non-numeric data
 prep.i.nonnumeric:{[t](count;{count distinct x};{};{};{};{};t)}
-
-// Python functions for preprocessing nlp tables
-prep.i.tfidf:.p.import[`sklearn.feature_extraction.text][`:TfidfVectorizer][`stop_words pykw "english"]

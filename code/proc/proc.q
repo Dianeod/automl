@@ -12,11 +12,12 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
   system"S ",string s:p`seed;
   // Apply train test split to keep holdout for feature impact plot and testing of vanilla best model
   tt:p[`tts][data;tgt;p`hld];
+  xtrn:tt`xtrain;ytrn:tt`ytrain;xtst:tt`xtest;ytst:tt`ytest;
   mdls:i.kerascheck[mdls;tt;tgt];
   xv_tstart:.z.T;
   // Complete a seeded cross validation on training sets producing the predictions with associated 
   // real values. This allows the best models to be chosen based on relevant user defined metric 
-  p1:proc.xv.seed[tt`xtrain;tt`ytrain;p]'[mdls];
+  p1:proc.xv.seed[xtrn;ytrn;p]'[mdls];
   scf:i.scfn[p;mdls];
   ord:proc.i.ord scf;
   // Score the models based on user denoted scf and ordered appropriately to find best model

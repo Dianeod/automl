@@ -49,22 +49,13 @@ prep.normalcreate:{[t;p]
 prep.nlpcreate:{[t;p]
  fe_start:.z.T;
  tstr:.ml.i.fndcols[t;"C"];
- tb:prep.i.tfidf[`:fit_transform][raze t[tstr]][`:toarray][]`;
- tb:flip (`$prep.i.tfidf[`:get_feature_names][]`)!m:flip tb;
- system"mkdir -p ",p[`spath],"/nlp";
+ tfidf:.p.import[`sklearn.feature_extraction.text][`:TfidfVectorizer][`stop_words pykw "english"];
+ tbvect:tfidf[`:fit_transform][raze t[tstr]][`:toarray][]`;
+ tbvect:flip (`$tfidf[`:get_feature_names][]`)!m:flip tbvect;
+ system"mkdir -p ",tfidfp:path,"/",p[`spath],"/nlp";
  joblib:.p.import[`joblib];
- joblib[`:dump][prep.i.tfidf;p[`spath],"/nlp/vectorize"];
- sp:.p.import[`spacy];
- dr:.p.import[`builtins][`:dir];
- pos:dr[sp[`:parts_of_speech]]`;
- unipos:`$pos[til (first where 0<count each pos ss\:"__")];
- myparser:.nlp.newParser[`en;`isStop`uniPOS];
- corpus:myparser raze t[tstr];
- tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
- sentt:.nlp.sentiment each raze t[tstr];
- tb:tb,'tpos,'sentt;
- tb[`isStop]:{sum[x]%count x}each corpus`isStop;
- tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
+ joblib[`:dump][tfidf;tfidfp,"/vectorize"];
+ tb:tbvect,'prep.i.nlpfeats[t];
  if[0<count cols[t] except tstr;tb:tb,'(prep.normalcreate[(tstr)_t;p])[0]];
  fe_end:.z.T-fe_start;
  (tb;fe_end)}
@@ -72,17 +63,7 @@ prep.nlpcreate:{[t;p]
 prep.nlppre:{[t;p]
  fe_start:.z.T;
  tstr:.ml.i.fndcols[t;"C"];
- sp:.p.import[`spacy];
- dr:.p.import[`builtins][`:dir];
- pos:dr[sp[`:parts_of_speech]]`;
- unipos:`$pos[til (first where 0<count each pos ss\:"__")];
- myparser:.nlp.newParser[`en;`isStop`uniPOS];
- corpus:myparser raze t[tstr];
- tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
- sentt:.nlp.sentiment each raze t[tstr];
- tb:tpos,'sentt;
- tb[`isStop]:{sum[x]%count x}each corpus`isStop;
- tb:.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];
+ tb:prep.i.nlpfeats[t];
  tb:$[0<count cols[t] except tstr;t,'(prep.normalcreate[tb,'(tstr)_t;p])[0];t,'(prep.normalcreate[tb;p])[0]];
  fe_end:.z.T-fe_start;
  (tb;fe_end)}

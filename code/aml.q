@@ -18,7 +18,7 @@ run:{[tb;tgt;ftype;ptype;p]
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[nlptyp:`nlp~ftype;dict[`tgtnum`spath]:(count distinct tgt;1_-8_last spaths`config)];
+  if[nlptyp:ftype in `nlp`nlpvect;dict[`tgtnum`spath]:(count distinct tgt;1_-8_last spaths`config)];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -70,7 +70,7 @@ run:{[tb;tgt;ftype;ptype;p]
     prms:proc.gs.psearch[xtrn[;inds];ytrn;xtst[;inds:bm[6]];ytst;bm 1;dict;ptype;mdls];
     score:first prms;expmdl:last prms];
   if[nlptyp&1~count bm[1];$[bm[1]in i.nlplist;
-     [cbt:count feats:.ml.i.fndcols[tb 0;"C"];system["rm -r ",path,"/",dict[`spath],"/models"]];
+     [cbt:count feats:.ml.i.fndcols[tb 0;"C"];system[$["w"~first string .z.o;"del /f ";"rm -r "],path,"/",dict[`spath],"/models"]];
      (cbt:count feats except strcol;feats:feats except strcol:.ml.i.fndcols[tb 0;"C"])]];
   // Save down a pdf report summarizing the running of the pipeline
   if[2=dict[`saveopt];

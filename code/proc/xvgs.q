@@ -10,13 +10,13 @@
 // Seeded cross-validation function, designed to ensure that models will be consistent
 // from run to run in order to accurately assess the benefit of updates to parameters
 proc.xv.seed:{[xtrn;ytrn;p;mdls]
-  sk:mdls[`lib] in`sklearn;
+  sk:mdls[`lib]~`sklearn;
   system"S ",string p`seed;
   // Add a random state to a model if denoted by the flat file definition of the models
   // this needs to be handled differently for sklearn and keras models
   s:$[ms:mdls[`seed] in`seed`dict;
-      $[sk;enlist[`random_state]!enlist p`seed;(p;mdls)]
-      ;::];
+      $[sk;enlist[`random_state]!enlist p`seed;(p;mdls)];
+      ::];
   if[`nlp~p`typ;xtrn:xtrn[;where $[mdls[`fnc]~`nlp;;not]10h=type each first xtrn]];
     p1:$[ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
@@ -25,7 +25,7 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
     first value get[p[`gs]0][p[`gs]1;1;xtrn;ytrn;p[`prf]mdls`minit;s;enlist[`val]!enlist 0];
     // Otherwise a vanilla cross validation is performed
     get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]];
-    if[mdls[`fnc]~`nlp;system["rm -r ",path,"/",p[`spath],"/","nlpmodel/ ",path,"/",p[`spath],"/","cache_dir/ "]];p1}
+    if[mdls[`fnc]~`nlp;system[$["w"~first string .z.o;"del /f ";"rm -r "],path,"/",p[`spath],"/","nlpmodel/ ",path,"/",p[`spath],"/","cache_dir/ "]];p1}
 
 
 // Grid search over the set of all hyperparameters outlined in code/mdldef/hyperparams.txt

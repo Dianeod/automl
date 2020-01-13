@@ -8,7 +8,7 @@ p)def< checkimport():
 
 p)def< checkimportsimp():
   try:
-    import simpletransformer
+    import simpletransformers
     return(0)
   except:
     return(1)

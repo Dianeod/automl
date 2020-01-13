@@ -4,7 +4,7 @@
 /* d = data as a mixed list containing training and testing data ((xtrn;ytrn);(xtst;ytst))
 /* s = seed used for initialising the same model
 /* o = one-hot encoding for multi-classification example
-/* m = model object being passed through the system
+/* m = model object being passed through the system (compiled/fitted)
 /* dict = dictionary of parameters
 /* mdl = dictionary of model being used
 /. r > the predicted values for a given model as applied to input data
@@ -57,7 +57,7 @@ nlpfit:{[d;m]m[`:train_model][pdD((d[0]0),'enlist each d[0]1)];m}
 binarypredict  :{[d;m].5<raze m[`:predict][npa d[1]0]`}
 multipredict:{[d;m]m[`:predict_classes][npa d[1]0]`}
 regpredict  :{[d;m]raze m[`:predict][npa d[1]0]`}
-nlppredict  :{[d;m]first m[`:predict][$[0h~type d[1]0;raze;] d[1]0]`}
+nlpclasspredict  :{[d;m]first m[`:predict][$[0h~type d[1]0;raze;] d[1]0]`}
 
 binarypredictprob   :{[d;m]flip(poscl;1-poscl:m[`:predict][npa d[1]0]`)}
 nlpclasspredictprob :{[d;m]sm:.p.import[`scipy.special]`:softmax;

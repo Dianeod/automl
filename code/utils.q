@@ -202,7 +202,7 @@ i.normalproc:{[t;p]
   t:.ml.infreplace[t];
   t:first prep.normalcreate[t;p];
   flip value flip p[`features]#t}
- 
+
 // Apply feature creation and encoding procedures for FRESH on new data
 /. r > table with feature creation and encodings applied appropriately
 i.freshproc:{[t;p]
