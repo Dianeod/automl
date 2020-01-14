@@ -73,7 +73,7 @@ run:{[tb;tgt;ftype;ptype;p]
      [cbt:count feats:.ml.i.fndcols[tb 0;"C"];system[$["w"~first string .z.o;"del /f ";"rm -r "],path,"/",dict[`spath],"/models"]];
      (cbt:count feats except strcol;feats:feats except strcol:.ml.i.fndcols[tb 0;"C"])]];
   // Save down a pdf report summarizing the running of the pipeline
-  if[2=dict[`saveopt];
+  if[2=dict`saveopt;
     -1 i.runout[`save],spaths[1]`report;
     report_param:post.i.reportdict[ctb;bm;tb;dtdict;path;(prms 1;score;dict`xv;dict`gs);spaths];
     post.report[report_param;dtdict;spaths[0]`report]];

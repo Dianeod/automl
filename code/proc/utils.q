@@ -31,6 +31,7 @@ proc.i.updmodels:{[mdls;tgt]
     -1"No longer running neural nets or svms\n";
     select from mdls where(lib<>`keras),not fnc in`neural_network`svm];mdls]}
 
+// Get index of max item in list
 proc.i.imax:{x?max x}
 
 // Train data on best model and test on testing set

@@ -142,6 +142,8 @@ prep.i.default:{[t]t}
 prep.i.freshsigerr:"The feature significance extraction process deemed none of the features ",
   "to be important continuing anyway"
 
+// Create features from spacy module for nlp tasks
+/. r > returns table with newly created features
 prep.i.nlpfeats:{[t]
  tstr:.ml.i.fndcols[t;"C"];
  sp:.p.import[`spacy];

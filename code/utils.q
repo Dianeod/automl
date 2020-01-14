@@ -224,26 +224,20 @@ i.freshproc:{[t;p]
     t:pfeat  xcols flip flip[t],newcols!((count newcols;count t)#0f),()];
   flip value flip pfeat #"f"$0^t}
 
-// Apply feature creation and encoding procedures for nlp on new data
-/. r > table with feature creation and encodings applied appropriately
+// Apply feature creation and encoding procedures using vectorization for nlp on new data
+/. r > table with feature creation
 i.nlpproc:{[t;p;fp] 
  joblib:.p.import[`joblib];
  vectorize:joblib[`:load][fp,"/nlp/vectorize"];
  colst:.ml.i.fndcols[t;"C"];
  tb:vectorize[`:transform][raze t[colst]][`:toarray][]`;
  tb:flip (`$vectorize[`:get_feature_names][]`)!m:flip tb;
- sp:.p.import[`spacy];
- dr:.p.import[`builtins][`:dir];
- pos:dr[sp[`:parts_of_speech]]`;
- unipos:`$pos[til (first where 0<count each pos ss\:"__")];
- myparser:.nlp.newParser[`en;`isStop`uniPOS];
- corpus:myparser raze t[colst];
- tpos:{((y!(count y)#0f)),`float$(count each x)%count raze x}[;unipos]each group each corpus`uniPOS;
- sentt:.nlp.sentiment each raze t[colst];
- tb:tb,'tpos,'sentt;
- tb[`isStop]:{sum[x]%count x}each corpus`isStop;
+ tb:tb,'prep.i.nlpfeats[t];
+ if[0<count cols[t] except colst;tb:tb,'(prep.normalcreate[(colst)_t;p])[0]];
  flip tb[p`features]}
  
+// Apply feature creation and encoding procedures for pretrained nlp models on new data
+/. r > table with feature creation
 i.nlppreproc:{[t;p]
   tb:prep.nlppre[t;p];
   flip tb[0][p`features]}
