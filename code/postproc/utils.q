@@ -19,7 +19,7 @@
 /* p    = parameter set
 /* b    = boolean indicating the type of data used
 /. r   > a dictionary mapping the feature impact to associated column/row
-post.imp:{[bs;mdl;data;cnm;scf;p;b]
+post.i.imp:{[bs;mdl;data;cnm;scf;p;b]
  data[0 2]:flip each flip data[0 2]@\:'/:inds:where $[b;;not]10h=type each first data[0];
  r:post.i.predshuff[bs[b&n];mdl[b&n:count[bs]-1];data;scf;;p`seed]each til count inds;
  ord:proc.i.ord scf;
@@ -44,9 +44,10 @@ post.i.shuffle:{[tm;c]
 post.i.predshuff:{[bs;mdl;data;scf;cr;p]
   epymdl:mdl[0];mdltb:mdl[1];
   xtest:post.i.shuffle[data 2;cr];
-  funcnm:string first exec fnc from mdltb where model=bs;
+  mdlfnc:select from mdltb where model=bs;
+  funcnm:$[mtyp:first[mdlfnc[`model]] in i.nlplist;".aml.nlp";".aml."],string first[mdlfnc[`typ]];
   preds:$[bs in i.nlplist,i.keraslist;
-        get[".aml.",funcnm,"predict"][((data 0;data 1);(xtest;data 3));epymdl];
+        get[funcnm,"predict"][((data 0;data 1);(xtest;data 3));epymdl];
         epymdl[`:predict][xtest]`];
   scf[;data 3]preds
   }

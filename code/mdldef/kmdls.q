@@ -69,5 +69,5 @@ dns:.p.import[`keras.layers]`:Dense;
 nps:.p.import[`numpy.random][`:seed];
 pdD:.p.import[`pandas]`:DataFrame;
 nlpclass:.p.import[`simpletransformers.classification]`:ClassificationModel;
-if[not 1~checkimport[];tf:.p.import[`tensorflow];tfs:tf$[2>"I"$first tf[`:__version__]`;[`:random.set_random_seed];[`:random.set_seed]]];
+if[not 1~checkimport[];tf:.p.import[`tensorflow];tfs:tf$[2>"I"$first tf[`:__version__]`;[`:set_random_seed];[`:random.set_seed]]];
 if[not 1~checkimportsimp[];trseed:.p.import[`torch][`:manual_seed]];

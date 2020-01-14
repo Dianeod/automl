@@ -18,7 +18,9 @@ run:{[tb;tgt;ftype;ptype;p]
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[nlptyp:ftype in `nlp`nlpvect;dict[`tgtnum`spath]:(count distinct tgt;1_-8_last spaths`config)];
+  if[nlptyp:ftype in `nlp`nlpvect;dict[`tgtnum`spath]:(count distinct tgt;1_-8_last spaths`config);
+  if[1<count strcol:.ml.i.fndcols[tb;"C"];
+    tb[`$"_" sv string strcol]:raze each flip tb[strcol];tb:![tb;();0b;strcol]]];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -96,6 +98,9 @@ new:{[t;fp]
   // Retrieve the metadata from a file path based on the run date/time
   metadata:i.getmeta[i.ssrwin[path,"/outputs/",fp,"/config/metadata"]];
   typ:metadata`typ;
+  if[(typ in`nlp`nlpvect)&1<count strcol:.ml.i.fndcols[t;"C"];
+    t[`$"_" sv string strcol]:raze each flip t[strcol];t:![t;();0b;strcol]];
+  metadata:i.getmeta[i.ssrwin[path,"/outputs/",fp,"/config/metadata"]];
   data:$[`normal=typ;
     i.normalproc[t;metadata];
     `fresh=typ;
