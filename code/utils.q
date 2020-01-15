@@ -99,7 +99,8 @@ i.nlpclassdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp
 i.scorepred:{[data;bmn;mdl;fnm;b]
   $[bmn in i.nlplist,i.keraslist;
          // Formatting of first param is a result of previous implementation choices
-         get[".aml.",fnm,$[b;"predict";"predictprob"]][(0n;(data 2;0n));mdl];
+         [fncn:$[first[fnm[`model]] in i.nlplist;".aml.nlp";".aml."];
+         get[fncn,string[first[fnm[`typ]]],$[b;"predict";"predictprob"]][(0n;(data 2;0n));mdl]];
          mdl[$[b;`:predict;`:predict_proba]][data 2]`]
   }
 

@@ -64,7 +64,7 @@ run:{[tb;tgt;ftype;ptype;p]
    score:fn[;ytst]proc.i.imax each avg i.scorepred'[data;bm[1];last bm;funcnm;00b];expmdl:first last bm];
   if[not[comb]&a:all bm[1]in i.excludelist;
     data:(xtrn[;inds];ytrn;xtst[;inds:bm[6]];ytst);
-    funcnm:string first exec fnc from mdls where model=bm[1];
+    funcnm:select from mdls where model=bm[1];
     -1 i.runout`ex;score:fn[;data 3]i.scorepred[data;bm[1];expmdl:last bm;funcnm;1b]];
   // Run grid search on the best model for the parameter sets defined in hyperparams.txt
   if[not[comb]&b:not a;
