@@ -1,0 +1,6 @@
+Bert                       | simpletransformers ;   nlp                      ; dict ; class
+RoBERTa                    | simpletransformers ;   nlp                      ; dict ; class
+DistilBERT                 | simpletransformers ;   nlp                      ; dict ; class
+ALBERT                     | simpletransformers ;   nlp                      ; dict ; class
+XLM                        | simpletransformers ;   nlp                      ; dict ; class
+XLNet                      | simpletransformers ;   nlp                      ; dict ; class
