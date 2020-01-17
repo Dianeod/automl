@@ -33,6 +33,7 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
   bm_tstart:.z.T;
   // Extract the best model, fit on entire training set and predict/score on test set
   // for the appropriate scoring function
+  p,:enlist[`args]!enlist(enlist[`save_model_every_epoch]!enlist 1b);
   preds:$[b:bs~comb;(scf[;tt`ytest]proc.i.imax each avg pr[;0];
          flip(pr:proc.i.mdls[;tt;mdls;p;0b]each combmdl)[;1 2])
         ;(scf[;tt`ytest]pr[0];(pr:proc.i.mdls[bs;tt;mdls;p;1b])1 2)];

@@ -1,8 +1,5 @@
 \d .aml
 
-\l nlp/nlp.q
-.nlp.loadfile`:init.q
-
 // Load in the machine learning toolkit which should be located in $QHOME
 // also load in some updates to the toolkit to be integrated at a later date
 \l ml/ml.q
@@ -25,3 +22,7 @@ loadfile`:code/postproc/report.q
 loadfile`:code/postproc/utils.q
 loadfile`:code/utils.q
 loadfile`:code/aml.q
+
+\l nlp/nlp.q
+.nlp.loadfile`:init.q
+

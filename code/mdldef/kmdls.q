@@ -19,13 +19,13 @@ actdict:`binary`reg`multi!("sigmoid";"relu";"softmax")
 lossdict:`binary`reg`multi!("binary_crossentropy";"mse";"categorical_crossentropy")
 
 nlpdict:(!). flip(
- (`Bert;         "bert-base-uncased");
- (`RoBERTa;      "roberta-base");
- (`XLNet;        "xlnet-base-cased");
- (`XLM ;         "xlm-mlm-en-2048");
- (`DistilBERT;   "distilbert-base-uncased-distilled-squad");
- (`ALBERT  ;     "albert-base-v1");
- (`CamemBERT;    "camembert-base"))
+ (`bert;         "bert-base-uncased");
+ (`roberta;      "roberta-base");
+ (`xlnet;        "xlnet-base-cased");
+ (`xlm;          "xlm-mlm-en-2048");
+ (`distilbert;   "distilbert-base-uncased-distilled-squad");
+ (`albert;     "albert-base-v1");
+ (`camembert;    "camembert-base"))
 
 mdl:{[dict;mdls;d]
  nps[s:dict`seed];
@@ -37,13 +37,15 @@ mdl:{[dict;mdls;d]
 
 
 nlpmdl:{[dict;mdls;d]
- args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data!
-  (1b;0b;path,"/",dict[`spath],"/nlpmodel/",string[lower mdln:first mdls`model];(cachedr:path,"/",dict[`spath]),"/cache_dir";1b;0b);
+ args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data`regression`tensorboard_dir!
+  (1b;0b;pth,"/nlpmodel/",string[mdln:lower$[type[mdls]in neg[11h];mdls;first mdls`model]];
+  pth,"/cache_dir";1b;0b;regmd:`reg~dict[`ptyp];(pth:path,"/",dict[`spath]),"/runs");
  args,:dict`args;
+ nps[dict`seed];
  trseed[dict`seed];
- modeln:$[`best_model in key dict;path,"/",(dict`spath),"/nlpmodel/",string[lower mdln];nlpdict[mdln]];
+ modeln:$[`best_model in key dict;pth,"/nlpmodel/",string[mdln];nlpdict[mdln]];
  pydict:`model_type`model_name`use_cuda`num_labels`args!
-        (lower mdln;modeln;0b;dict`tgtnum;args);
+        (mdln;modeln;0b;$[regmd;1;dict`tgtnum];args);
  m:nlpclass[pykwargs pydict];m}
 
 /. r > the fit keras/simpletransformers model
@@ -71,3 +73,7 @@ pdD:.p.import[`pandas]`:DataFrame;
 nlpclass:.p.import[`simpletransformers.classification]`:ClassificationModel;
 if[not 1~checkimport[];tf:.p.import[`tensorflow];tfs:tf$[2>"I"$first tf[`:__version__]`;[`:set_random_seed];[`:random.set_seed]]];
 if[not 1~checkimportsimp[];trseed:.p.import[`torch][`:manual_seed]];
+
+/ allow multiprocess
+.ml.loadfile`:util/mproc.q
+if[0>system"s";.ml.mproc.init[abs system"s"]("system[\"l automl/automl.q\"]";".aml.loadfile`:init.q")];

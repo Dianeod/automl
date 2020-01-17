@@ -25,7 +25,7 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
     first value get[p[`gs]0][p[`gs]1;1;xtrn;ytrn;p[`prf]mdls`minit;s;enlist[`val]!enlist 0];
     // Otherwise a vanilla cross validation is performed
     get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]];
-    if[mdls[`fnc]~`nlp;system[$["w"~first string .z.o;"del /f ";"rm -r "],path,"/",p[`spath],"/","nlpmodel/ ",path,"/",p[`spath],"/","cache_dir/ "]];p1}
+    if[mdls[`fnc]~`nlp;system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"nlpmodel/ ",(pth:path,"/",p[`spath],"/"),"cache_dir/ "]];p1}
 
 
 // Grid search over the set of all hyperparameters outlined in code/mdldef/hyperparams.txt

@@ -10,6 +10,15 @@
 
 // Utilities for run.q
 
+// This function checks that functions a user is attempting to overwrite
+// default behaviour with are valid, this can be expanded as required
+i.checkfuncs:{[dict]
+  fns:raze dict[`funcs`prf`tts`sigfeats],value[dict`scf],first each dict`xv`gs;
+  if[0<cnt:sum locs:@[{$[not type[get[x]]in(100h;104h);'err;0b]};;{[err]err;1b}]each fns;
+     funclst:{$[2<x;" ",y;"s ",sv[", ";y]]}[cnt]string fns where locs;
+    '"The function",/funclst," are not defined in your process\n"]
+ }
+
 //  This function sets or updates the default parameter dictionary as appropriate
 i.updparam:{[t;p;typ]
   dict:
@@ -39,7 +48,7 @@ i.updparam:{[t;p;typ]
               " or a dictionary with appropriate key/value pairs"];
 	   d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
       typ in `nlpvect`nlp;
-       {[t;p]d:i.nlpclassdefault[];
+       {[t;p]d:i.nlpdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.aml.i.getdict p];
             if[-11h~ty;p:.aml.i.getdict$[":"~first p;1_;]p:string p];
@@ -48,7 +57,7 @@ i.updparam:{[t;p;typ]
            p~(::);d;
            '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
-           d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
+           d,`pyt`tf!(1~checkimportsimp[];1~checkimport[])}[t;p];
       typ=`tseries;
       '`$"This will need to be added once the time-series recipe is in place";
     '`$"Incorrect input type"]}
@@ -79,14 +88,14 @@ i.getdict:{[nm]
 // or in the creation of a new initialisation parameter flat file
 /* Neither of these function take a parameter as input
 /. r > default dictionaries which will be used by the automl
-i.freshdefault:{`aggcols`funcs`xv`gs`prf`scf`seed`saveopt`hld`tts`sz!
+i.freshdefault:{`aggcols`funcs`xv`gs`prf`scf`seed`saveopt`hld`tts`sz`sigfeats!
   ({first cols x};`.ml.fresh.params;(`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.xv.fitpredict;
-   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.ttsnonshuff;0.2)}
-i.normaldefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz!
+   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.ttsnonshuff;0.2;`.aml.prep.freshsignificance)}
+i.normaldefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`sigfeats!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.aml.prep.i.default;`.aml.xv.fitpredict;
-   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2)}
-i.nlpclassdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`runcomb!
-  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.prep.i.bulktransform`.aml.prep.i.truncsvd;`.aml.xv.fitpredict;enlist[`class]!enlist`.ml.accuracy;
+   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2;`.aml.prep.freshsignificance)}
+i.nlpdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`runcomb!
+  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.aml.prep.i.bulktransform`.aml.prep.i.truncsvd;`.aml.xv.fitpredict;`class`reg!(`.ml.accuracy;`.ml.mse);
    `rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`multiclass;0b)}
 
 // Apply an appropriate scoring function to predictions from a model
@@ -110,8 +119,8 @@ i.scorepred:{[data;bmn;mdl;fnm;b]
 /* bmo = best model object (embedPy)
 /* r = all applied models (table)
 i.savemdl:{[bmn;bmo;mdls;nms]
-  fname:nms[0]`models;mo:nms[1]`models;
- // system"mkdir -p ",fname;
+  fname:nms[0]`models;mo:i.ssrsv[nms[1]`models];
+  system"mkdir -p ",fname;
   joblib:.p.import[`joblib];
   $[(`sklearn=?[mdls;enlist(=;`model;bmn,());();`lib])0;
       (joblib[`:dump][bmo;fname,"/",string[bmn]];-1"Saving down ",string[bmn]," model to ",mo);
@@ -128,7 +137,7 @@ i.savemdl:{[bmn;bmo;mdls;nms]
 i.models:{[ptyp;tgt;p]
   if[not ptyp in key proc.i.files;'`$"text file not found"];
   d:proc.i.txtparse[ptyp;"/code/mdldef/"];
-  if[`nlp~p`typ;d,:proc.i.txtparse[`nlpclass;"/code/mdldef/"]];
+  if[0b~p`pyt;d,:proc.i.txtparse[`nlpclass;"/code/mdldef/"]];
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
   m:flip`model`lib`fnc`seed`typ!flip key[d],'value d;
@@ -154,7 +163,7 @@ i.updmodels:{[mdls;tgt]
 // at present this should include the Keras models as a sufficient tuning method
 // has yet to be implemented
 i.keraslist:`RegKeras`MultiKeras`BinaryKeras
-i.nlplist:`Bert`RoBERTa`XLNet`XLM`DistilBERT`ALBERT`CamenBERT
+i.nlplist:`Bert`RoBERTa`XLNet`XLM`DistilBERT`ALBERT`CamemBERT
 i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression`Combination;
 
 // Dictionary with mappings for console printing to reduce clutter in .aml.runexample
@@ -182,7 +191,7 @@ i.savemeta:{[d;dt;fpath]
   $[first[string .z.o]in "lm";
     system"mv metadata ",;
     system"move metadata ",]fpath[0]`config;
-  -1"Saving down model parameters to ",fpath[1]`config;}
+  -1"Saving down model parameters to ",i.ssrsv[fpath[1]`config];}
 
 // Retrieve the metadata information from a specified path
 /* fp = full file path denoting the location of the metadata to be retrieved
@@ -252,7 +261,7 @@ i.pathconstruct:{[dt;svo]
   if[svo=2;names:names,`images`report]
   pname:{"/",ssr["outputs/",string[x`stdate],"/run_",string[x`sttime],"/",y,"/";":";"."]};
   paths:path,/:pname[dt]each string names;
-  paths:i.ssrwin[paths];
+  paths:i.ssrwin each paths;
   {[fnm]system"mkdir",$[.z.o like "w*";" ";" -p "],fnm}each paths;
   (names!paths;names!{count[path]_x}each paths)
   }
@@ -270,14 +279,14 @@ i.procmodel:{[md;metadata;data;fp;b]
     krload:.p.import[`keras.models][`:load_model];
     $[(mp:first md 1)in`sklearn`keras;
     // Apply the relevant saved down model to new data
-    [fp_upd:i.ssrwin[path,"/outputs/",fp,"/models/",string md 0];
-     if[bool:(mdl:md 0)in i.keraslist;fp_upd,:".h5"];
+    [fp_upd:i.ssrwin[path,"/outputs/",fp,"/models/",string mdln:md 0];
+     if[bool:mdln in i.keraslist;fp_upd,:".h5"];
      model:$[mp~`sklearn;skload;krload]fp_upd;
      $[bool;[fnm:neg[5]_string lower mdl;get[".aml.",
-       fnm,$[b;"predict";"predictprob"]][(0n;(data;0n));model]];
-       model[[$[b;`:predict;`:predict_proba]];<]data]];
-     mp~`simpletransformers;[model:nlpmdl[metadata;md 0];
-      $[b;first;last]model[`:predict;<]data];
+       fnm,$[b;"predict";"predictprob"]][(0n;(data[;where not 10h=type each first data];0n));model]];
+       model[[$[b;`:predict;`:predict_proba]];<]data[;where not 10h=type each first data]]];
+     mp~`simpletransformers;[model:nlpmdl[metadata;md 0;(::)];
+      $[b;first;last]model[`:predict;<]$[0h~type datastr;raze;]datastr:data[;where 10h=type each first data]];
       '`$"The current model type you are attempting to apply is not currently supported"]
    }
 
@@ -306,3 +315,7 @@ i.kerascheck:{[mdls;tts;tgt]
 /* path = the linux 'like' path
 /. r    > the path modified to be suitable for windows systems
 i.ssrwin:{[path]$[.z.o like "w*";ssr[path;"/";"\\"];path]}
+
+// Used throughout when printing directory of saved objects.
+// this is to keep linux/windows consistent
+i.ssrsv:{[path] ssr[path;"\\";"/"]}

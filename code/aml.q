@@ -14,11 +14,14 @@ run:{[tb;tgt;ftype;ptype;p]
   dtdict:`stdate`sttime!(.z.D;.z.T);
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
+  // Check that the functions to overwrite default behaviour exist in process
+  i.checkfuncs[dict];
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
   if[nlptyp:ftype in `nlp`nlpvect;dict[`tgtnum`spath]:(count distinct tgt;1_-8_last spaths`config);
+  // If there is multiple string columns, join them together to be passed to the models later
   if[1<count strcol:.ml.i.fndcols[tb;"C"];
     tb[`$"_" sv string strcol]:raze each flip tb[strcol];tb:![tb;();0b;strcol]]];
   mdls:i.models[ptype;tgt;dict];
@@ -51,6 +54,8 @@ run:{[tb;tgt;ftype;ptype;p]
   if[1~checkimport[];mdls:?[mdls;enlist(<>;`lib;enlist `keras);0b;()]];
   -1 i.runout`sig;-1 i.runout`slct;-1 i.runout[`tot],string[ctb:count cols tab];
   // Run all appropriate models on the training set
+  // Set numpy random seed if multiple prcoesses
+  if[0<abs[system "s"];.p.import[`numpy][`:random.seed][dict`seed];if[0b~dict`pyt;neg[.z.pd]@\:".aml.nps ",string[dict`seed]]];
   bm:proc.runmodels[xtrn;ytrn;mdls;cols tts`xtrain;dict;dtdict;spaths];
   fn:i.scfn[dict;mdls];
   // Do not run grid search on deterministic models returning score on the test set and model
@@ -58,7 +63,7 @@ run:{[tb;tgt;ftype;ptype;p]
   if[comb:2~count bm[1];
   data:((xtrn[;inorm];ytrn;xtst[;inorm:first bm[6]];ytst);
         (xtrn[;inlp];ytrn;xtst[;inlp:last bm[6]];ytst));
-   funcnm:string exec fnc from mdls where model in bm[1];
+   funcnm:select from mdls where model in bm[1];
    if[not first[bm[1]]in i.excludelist;gsmdl:proc.gs.psearch[xtrn[;inorm];ytrn;xtst[;inorm];ytst;first bm[1];dict;ptype;mdls];
        bm[7;0]:last gsmdl];
    score:fn[;ytst]proc.i.imax each avg i.scorepred'[data;bm[1];last bm;funcnm;00b];expmdl:first last bm];
@@ -76,7 +81,7 @@ run:{[tb;tgt;ftype;ptype;p]
      (cbt:count feats except strcol;feats:feats except strcol:.ml.i.fndcols[tb 0;"C"])]];
   // Save down a pdf report summarizing the running of the pipeline
   if[2=dict`saveopt;
-    -1 i.runout[`save],spaths[1]`report;
+    -1 i.runout[`save],i.ssrsv[spaths[1]`report];
     report_param:post.i.reportdict[ctb;bm;tb;dtdict;path;(prms 1;score;dict`xv;dict`gs);spaths];
     post.report[report_param;dtdict;spaths[0]`report]];
   if[dict[`saveopt]in 1 2;
@@ -107,9 +112,9 @@ new:{[t;fp]
     i.freshproc[t;metadata]; 
     `nlpvect=typ;
     i.nlpproc[t;metadata;path,"/outputs/",fp];
-    `nlp=typ;$[metadata[`best_model] in i.nlplist;(ml.i.fndcols[t;"C"])#t;i.nlppreproc[t;metadata]];
+    `nlp=typ;$[all metadata[`best_model] in i.nlplist;(ml.i.fndcols[t;"C"])#t;i.nlppreproc[t;metadata]];
     '`$"This form of operation is not currently supported"];
-   $[2~count comb:`$"_" vs string metadata`best_model;imax each avg i.procmodel[;metadata;data;fp;0b]each flip(comb;metadata`pylib);
+   $[2~count metadata`best_model;proc.i.imax each avg i.procmodel[;metadata;data;fp;0b]each flip(metadata`best_model;metadata`pylib);
              i.procmodel[(metadata`best_model;metadata`pylib);metadata;data;fp;1b]]
   }
 
