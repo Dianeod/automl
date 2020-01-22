@@ -112,7 +112,7 @@ new:{[t;fp]
     i.freshproc[t;metadata]; 
     `nlpvect=typ;
     i.nlpproc[t;metadata;path,"/outputs/",fp];
-    `nlp=typ;$[all metadata[`best_model] in i.nlplist;(ml.i.fndcols[t;"C"])#t;i.nlppreproc[t;metadata]];
+    `nlp=typ;$[all metadata[`best_model] in i.nlplist;(.ml.i.fndcols[t;"C"])#t;i.nlppreproc[t;metadata]];
     '`$"This form of operation is not currently supported"];
    $[2~count metadata`best_model;proc.i.imax each avg i.procmodel[;metadata;data;fp;0b]each flip(metadata`best_model;metadata`pylib);
              i.procmodel[(metadata`best_model;metadata`pylib);metadata;data;fp;1b]]

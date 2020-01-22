@@ -14,7 +14,7 @@
 // default behaviour with are valid, this can be expanded as required
 i.checkfuncs:{[dict]
   fns:raze dict[`funcs`prf`tts`sigfeats],value[dict`scf],first each dict`xv`gs;
-  if[0<cnt:sum locs:@[{$[not type[get[x]]in(100h;104h);'err;0b]};;{[err]err;1b}]each fns;
+  if[0<cnt:sum locs:@[{$[not type[get[x]]in(99h;100h;104h);'err;0b]};;{[err]err;1b}]each fns;
      funclst:{$[2<x;" ",y;"s ",sv[", ";y]]}[cnt]string fns where locs;
     '"The function",/funclst," are not defined in your process\n"]
  }
@@ -106,10 +106,11 @@ i.nlpdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`ptyp`runc
 /* b    = boolean indicating to return prediction or prediction probabilities
 /. r    > predictions(probabilities) on test data
 i.scorepred:{[data;bmn;mdl;fnm;b]
-  $[bmn in i.nlplist,i.keraslist;
+  $[bmn in i.keraslist;
          // Formatting of first param is a result of previous implementation choices
-         [fncn:$[first[fnm[`model]] in i.nlplist;".aml.nlp";".aml."];
-         get[fncn,string[first[fnm[`typ]]],$[b;"predict";"predictprob"]][(0n;(data 2;0n));mdl]];
+         get[".aml."string[first fnm[`typ]],$[b;"predict";"predictprob"]][(0n;(data 2;0n));mdl];
+         bmn in i.nlplist;
+         get[".aml.nlp",$[b;"predict";"predictprob"]][(0n;(data 2;0n));mdl];
          mdl[$[b;`:predict;`:predict_proba]][data 2]`]
   }
 
@@ -162,9 +163,9 @@ i.updmodels:{[mdls;tgt]
 // These are a list of models which are deterministic and thus which do not need to be grid-searched 
 // at present this should include the Keras models as a sufficient tuning method
 // has yet to be implemented
-i.keraslist:`RegKeras`MultiKeras`BinaryKeras
+i.keraslist:`regkeras`multikeras`binarykeras
 i.nlplist:`Bert`RoBERTa`XLNet`XLM`DistilBERT`ALBERT`CamemBERT
-i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression`Combination;
+i.excludelist:i.nlplist,i.keraslist,`GaussianNB`LinearRegression;
 
 // Dictionary with mappings for console printing to reduce clutter in .aml.runexample
 i.runout:`col`pre`sig`slct`tot`ex`gs`sco`save!
@@ -250,7 +251,9 @@ i.nlpproc:{[t;p;fp]
 /. r > table with feature creation
 i.nlppreproc:{[t;p]
   tb:prep.nlppre[t;p];
-  flip tb[0][p`features]}
+  tt:tb[0][p`features];
+  tt[nl]:(count nl:where not (p`features) in cols tb[0];count first tt)#0;
+  flip tt}
  
 // Create the folders that are required for the saving of the config,models, images and reports
 /* dt  = date and time dictionary denoting the start of a run
@@ -282,10 +285,10 @@ i.procmodel:{[md;metadata;data;fp;b]
     [fp_upd:i.ssrwin[path,"/outputs/",fp,"/models/",string mdln:md 0];
      if[bool:mdln in i.keraslist;fp_upd,:".h5"];
      model:$[mp~`sklearn;skload;krload]fp_upd;
-     $[bool;[fnm:neg[5]_string lower mdl;get[".aml.",
+     $[bool;[fnm:neg[5]_string lower mdln;get[".aml.",
        fnm,$[b;"predict";"predictprob"]][(0n;(data[;where not 10h=type each first data];0n));model]];
        model[[$[b;`:predict;`:predict_proba]];<]data[;where not 10h=type each first data]]];
-     mp~`simpletransformers;[model:nlpmdl[metadata;md 0;(::)];
+     mp~`simpletransformers;[model:.aml.nlpmdl[metadata;md 0];
       $[b;first;last]model[`:predict;<]$[0h~type datastr;raze;]datastr:data[;where 10h=type each first data]];
       '`$"The current model type you are attempting to apply is not currently supported"]
    }

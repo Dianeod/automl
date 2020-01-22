@@ -14,9 +14,9 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
   system"S ",string p`seed;
   // Add a random state to a model if denoted by the flat file definition of the models
   // this needs to be handled differently for sklearn and keras models
-  s:$[ms:mdls[`seed] in`seed`dict;
-      $[sk;enlist[`random_state]!enlist p`seed;(p;mdls)];
-      ::];
+  s:$[ms:mdls[`seed] ~`seed;
+    $[sk;enlist[`random_state]!enlist p`seed;(p[`seed],mdls[`typ])];
+      mdls[`fnc]~`nlp;(p;mdls[`model]);::];
   if[`nlp~p`typ;xtrn:xtrn[;where $[mdls[`fnc]~`nlp;;not]10h=type each first xtrn]];
     p1:$[ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
@@ -25,7 +25,7 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
     first value get[p[`gs]0][p[`gs]1;1;xtrn;ytrn;p[`prf]mdls`minit;s;enlist[`val]!enlist 0];
     // Otherwise a vanilla cross validation is performed
     get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]];
-    if[mdls[`fnc]~`nlp;system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"nlpmodel/ ",(pth:path,"/",p[`spath],"/"),"cache_dir/ "]];p1}
+    if[mdls[`fnc]~`nlp;system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"nlpmodel/ ",(pth:path,"/",p[`spath],"/"),"cache_dir* "]];p1}
 
 
 // Grid search over the set of all hyperparameters outlined in code/mdldef/hyperparams.txt

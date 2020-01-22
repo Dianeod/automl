@@ -33,14 +33,12 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
   bm_tstart:.z.T;
   // Extract the best model, fit on entire training set and predict/score on test set
   // for the appropriate scoring function
-  p,:enlist[`args]!enlist(enlist[`save_model_every_epoch]!enlist 1b);
   preds:$[b:bs~comb;(scf[;tt`ytest]proc.i.imax each avg pr[;0];
          flip(pr:proc.i.mdls[;tt;mdls;p;0b]each combmdl)[;1 2])
         ;(scf[;tt`ytest]pr[0];(pr:proc.i.mdls[bs;tt;mdls;p;1b])1 2)];
-  -1"Score for validation predictions using best model = ",string[s2:preds 0],"\n";
   bm_tend:.z.T-bm_tstart;
   // Feature impact graph produced on holdout data if setting is appropriate
   if[2=p[`saveopt];post.featureimpact[$[b;bs:combmdl;enlist bs];(bm:first preds 1;$[b;2#enlist mdls;mdls]);value tt;cnms;scf;dt;fpath;p]];
   // Outputs from run models. These are used in the generation of a pdf report
   // or are used within later sections of the pipeline.
-  (s1;bs;s2;xv_tend;bm_tend;scf;last last preds;bm)}
+  (s1;bs;first preds;xv_tend;bm_tend;scf;last last preds;bm)}

@@ -15,9 +15,11 @@ proc.i.files:`class`reg`score`nlpclass!("classmodels.txt";"regmodels.txt";"scori
 /* fnc = function name if keras or module from which model is derived for keras
 /. r   > the appropriate function or projection in the case of sklearn
 proc.i.mdlfunc:{[lib;fnc;mdl]
-  $[lib in `keras`simpletransformers;
+  $[lib in `keras;
     // retrieve keras model from the .aml namespace eg '.aml.regfitscore'
     get` sv``aml,`fitscore;
+    lib in `simpletransformers;
+    get` sv``aml,`nlpfitscore;
     // construct the projection used for sklearn models eg '.p.import[`sklearn.svm][`:SVC]'
     {[x;y;z].p.import[x]y}[` sv lib,fnc;hsym mdl]]}
 
@@ -46,14 +48,14 @@ proc.i.mdls:{[bs;tt;mdls;p;b]
     tt[`xtrain]:tt[`xtrain][;inds:where $[bs in i.nlplist;;not]10h=type each first tt`xtrain];
     tt[`xtest]:tt[`xtest][;inds];
     data:((xtrn:tt`xtrain;ytrn:tt`ytrain);(xtst:tt`xtest;ytst:tt`ytest));
-    $[bs in i.keraslist,i.nlplist;
-    [funcnm:select from mdls where model=bs;
-     fnctyp:$[mtyp:first funcnm[`model] in i.nlplist;".aml.nlp";".aml."];
-     if[funcnm[`typ]~"multi";data[;1]:npa@'reverse flip@'./:[;((::;0);(::;1))](0,count ytst)_/:
+    $[bs in i.keraslist;
+    [funcnm:string first exec fnc from mdls where model=bs;
+      if[funcnm~"multi";data[;1]:npa@'reverse flip@'./:[;((::;0);(::;1))](0,count ytst)_/:
        value .ml.i.onehot1(,/)(ytrn;ytst)];
-     kermdl:get[`$fnctyp,"mdl"][p;funcnm;data];bm:get[`$fnctyp,"fit"][data;kermdl];
-     s2:get[`$fnctyp,string[first funcnm[`typ]],$[b;"predict";"predictprob"]][data;bm]];
-    [bm:(first exec minit from mdls where model=bs)[][];
+     kermdl:get[".aml.",funcnm,"mdl"][data;p`seed;funcnm];bm:get[".aml.",funcnm,"fit"][data;kermdl];
+     s2:get[".aml.",funcnm,$[b;"predict";"predictprob"]][data;bm]];
+    bs in i.nlplist;[fncnm:select from mdls where model=bs;nlpmd:get[".aml.nlpmdl"][p;fncnm];bm:get[".aml.nlpfit"][data;nlpmd];
+     s2:get[".aml.nlp",$[b;"predict";"predictprob"]][data;bm]];[bm:(first exec minit from mdls where model=bs)[][];
      bm[`:fit][xtrn;ytrn];s2:bm[$[b;`:predict;`:predict_proba]][xtst]`]
     ];(s2;bm;inds)}
 
