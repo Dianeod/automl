@@ -21,14 +21,15 @@ nlpdict:(!). flip(
  (`camembert;    "camembert-base"))
 
 
-nlpmdl:{[dict;mdls]
+nlpmdl:{[dict;mdls] 
  args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data`regression`tensorboard_dir!
   (1b;0b;pth,"/nlpmodel/",string[mdln:lower$[type[mdls]in neg[11h];mdls;first mdls`model]];
   pth,"/cache_dir";1b;0b;regmd:`reg~dict[`ptyp];(pth:path,"/",dict[`spath]),"/runs");
  args,:dict`args;
- trseed[dict`seed];
+ system["S ",string[dict`seed]];
  nps[dict`seed];
- .p.import[`random][`:seed][dict`seed];
+ tfs[dict`seed];
+ trmseed[dict`seed];
  modeln:$[`best_model in key dict;pth,"/nlpmodel/",string[mdln];nlpdict[mdln]];
  pydict:`model_type`model_name`use_cuda`num_labels`args!
         (mdln;modeln;0b;$[regmd;1;dict`tgtnum];args);
@@ -42,14 +43,14 @@ nlpfit:{[d;m]m[`:train_model][pdD((d[0]0),'enlist each d[0]1)];m}
 /*     formatting based on master workflow ((0n;0n);(xtst;0n))
 /. r > predicted values
 nlppredict  :{[d;m]first m[`:predict][$[0h~type d[1]0;raze;] d[1]0]`}
-
 nlppredictprob :{[d;m]sm:.p.import[`scipy.special]`:softmax;
                        sm[last m[`:predict][$[0h~type d[1]0;raze;] d[1]0]`;`axis pykw 1]`}
 
 nps:.p.import[`numpy.random][`:seed];
 pdD:.p.import[`pandas]`:DataFrame;
 nlpclass:.p.import[`simpletransformers.classification]`:ClassificationModel;
-if[not 1~checkimportsimp[];trseed:.p.import[`torch][`:manual_seed];trinit:.p.import[`torch][`:initial_seed]];
+trmseed:.p.import[`torch][`:manual_seed];
+tf:.p.import[`tensorflow];tfs:tf$[2>"I"$first tf[`:__version__]`;[`:set_random_seed];[`:random.set_seed]]
 
 / allow multiprocess
 .ml.loadfile`:util/mproc.q

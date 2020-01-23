@@ -4,4 +4,3 @@ matplotlib
 numpy
 statsmodels
 scikit-learn
-simpletransformers

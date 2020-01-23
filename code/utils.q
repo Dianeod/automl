@@ -252,7 +252,7 @@ i.nlpproc:{[t;p;fp]
 i.nlppreproc:{[t;p]
   tb:prep.nlppre[t;p];
   tt:tb[0][p`features];
-  tt[nl]:(count nl:where not (p`features) in cols tb[0];count first tt)#0;
+  tt[nl]:(count nl:where not(p`features)in cols tb[0];count first tt)#0;
   flip tt}
  
 // Create the folders that are required for the saving of the config,models, images and reports

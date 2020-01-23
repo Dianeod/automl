@@ -15,10 +15,10 @@ proc.i.files:`class`reg`score`nlpclass!("classmodels.txt";"regmodels.txt";"scori
 /* fnc = function name if keras or module from which model is derived for keras
 /. r   > the appropriate function or projection in the case of sklearn
 proc.i.mdlfunc:{[lib;fnc;mdl]
-  $[lib in `keras;
+  $[`keras~lib;
     // retrieve keras model from the .aml namespace eg '.aml.regfitscore'
     get` sv``aml,`fitscore;
-    lib in `simpletransformers;
+    lib~`simpletransformers;
     get` sv``aml,`nlpfitscore;
     // construct the projection used for sklearn models eg '.p.import[`sklearn.svm][`:SVC]'
     {[x;y;z].p.import[x]y}[` sv lib,fnc;hsym mdl]]}

@@ -19,7 +19,7 @@ run:{[tb;tgt;ftype;ptype;p]
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
-  if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
+  if[(ftype~`nlp)|dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;1|dict`saveopt]];
   if[nlptyp:ftype in `nlp`nlpvect;dict[`tgtnum`spath]:(count distinct tgt;1_-8_last spaths`config);
   // If there is multiple string columns, join them together to be passed to the models later
   if[1<count strcol:.ml.i.fndcols[tb;"C"];
@@ -55,7 +55,7 @@ run:{[tb;tgt;ftype;ptype;p]
   -1 i.runout`sig;-1 i.runout`slct;-1 i.runout[`tot],string[ctb:count cols tab];
   // Run all appropriate models on the training set
   // Set numpy random seed if multiple prcoesses
-  if[0<abs[system "s"];.p.import[`numpy][`:random.seed][dict`seed];if[0b~dict`pyt;neg[.z.pd]@\:".aml.nps ",string[dict`seed]]];
+  if[0<abs[system "s"];.p.import[`numpy][`:random.seed][dict`seed]];
   bm:proc.runmodels[xtrn;ytrn;mdls;cols tts`xtrain;dict;dtdict;spaths];
   fn:i.scfn[dict;mdls];
   // Do not run grid search on deterministic models returning score on the test set and model

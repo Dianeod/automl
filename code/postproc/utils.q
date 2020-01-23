@@ -44,10 +44,9 @@ post.i.shuffle:{[tm;c]
 post.i.predshuff:{[bs;mdl;data;scf;cr;p]
   epymdl:mdl[0];mdltb:mdl[1];
   xtest:post.i.shuffle[data 2;cr];
-  mdlfnc:select from mdltb where model=bs;
   preds:$[bs in i.keraslist;
         [funcnm:string first exec fnc from mdltb where model=bs;
-        get[".aml.",mdlfnc[`typ],"predict"][((data 0;data 1);(xtest;data 3));epymdl]];
+        get[".aml.",funcnm,"predict"][((data 0;data 1);(xtest;data 3));epymdl]];
         bs in i.nlplist;[funcnm:select from mdltb where model=bs;
         get[".aml.nlppredict"][((data 0;data 1);(xtest;data 3));epymdl]];
         epymdl[`:predict][xtest]`];
