@@ -13,3 +13,10 @@ p)def< checkimportsimp():
   except:
     return(1)
 
+p)def< checkimporttorch():
+  try:
+    import torch
+    return(0)
+  except:
+    return(1)
+

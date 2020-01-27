@@ -17,7 +17,7 @@ loadfile`:code/proc/xvgs.q
 $[0~checkimport[];
   loadfile`:code/mdldef/kerasmdls.q;
   [-1"Requirements for deep learning models not available, these will not be run";]]
-$[0~checkimportsimp[];
+$[0~max checkimportsimp[],checkimporttorch[];
   loadfile`:code/mdldef/nlpmdls.q;
   [-1"Requirements for pretrained nlp models not available, these will not be run";]]
 loadfile`:code/postproc/plots.q

@@ -57,7 +57,7 @@ i.updparam:{[t;p;typ]
            p~(::);d;
            '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
-           d,`pyt`tf!(1~checkimportsimp[];1~checkimport[])}[t;p];
+           d,`pyt`tf!(1~max checkimportsimp[],checkimporttorch[];1~checkimport[])}[t;p];
       typ=`tseries;
       '`$"This will need to be added once the time-series recipe is in place";
     '`$"Incorrect input type"]}
