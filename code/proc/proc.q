@@ -38,6 +38,7 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
         ;(scf[;tt`ytest]pr[0];(pr:proc.i.mdls[bs;tt;mdls;p;1b])1 2)];
   bm_tend:.z.T-bm_tstart;
   // Feature impact graph produced on holdout data if setting is appropriate
+  -1"Score for validation predictions using best model = ",string[first preds],"\n";
   if[2=p[`saveopt];post.featureimpact[$[b;bs:combmdl;enlist bs];(bm:first preds 1;$[b;2#enlist mdls;mdls]);value tt;cnms;scf;dt;fpath;p]];
   // Outputs from run models. These are used in the generation of a pdf report
   // or are used within later sections of the pipeline.
