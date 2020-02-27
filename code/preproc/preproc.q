@@ -13,7 +13,7 @@
 /. r   > a new table with the data preprocessed for the problem being solved
 preproc:{[t;tgt;typ;p]
   prep.i.lencheck[t;tgt;typ;p];
-  show prep.i.describe t;
+  show dscrb:prep.i.describe t;
   t:prep.i.symencode[t;10;0;p;::];
   // For FRESH the aggregate columns need to be excluded from the preprocessing
   // steps, this ensures that encoding is not performed on the aggregate columns
@@ -26,5 +26,5 @@ preproc:{[t;tgt;typ;p]
     count[cols tb]>count strcol:.ml.i.fndcols[tb;"C"];
     tb:?[tb;();0b;strcol!strcol],'prep.i.nullencode[.ml.dropconstant (strcol)_tb;med];tb];
   // perform an infinity replace and rejoin the separated aggregate columns for FRESH
-  $[`fresh=typ;flip sepdata,;flip]flip .ml.infreplace tb
+  ($[`fresh=typ;flip sepdata,;flip]flip .ml.infreplace tb;dscrb)
   }
