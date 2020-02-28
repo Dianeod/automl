@@ -1,0 +1,2 @@
+Bert                       | simpletransformers ;   nlp                      ; dict ; class
+RoBERTa                    | simpletransformers ;   nlp                      ; dict ; class
