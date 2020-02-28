@@ -8,7 +8,7 @@
 // Utilities for proc.q
 
 // Text files that can be parsed from within the models folder
-proc.i.files:`class`reg`score!("classmodels.txt";"regmodels.txt";"scoring.txt")
+proc.i.files:`class`reg`score`nlpclass!("classmodels.txt";"regmodels.txt";"scoring.txt";"nlpmodels.txt")
 
 // Build up the model to be applied based on naming convention
 /* lib = library which forms the basis for the definition
@@ -18,6 +18,8 @@ proc.i.mdlfunc:{[lib;fnc;mdl]
   $[`keras~lib;
     // retrieve keras model from the .automl namespace eg '.automl.regfitscore'
     get` sv``automl,`fitscore;
+    lib~`simpletransformers;
+    get` sv``automl,`nlpfitscore;
     // construct the projection used for sklearn models eg '.p.import[`sklearn.svm][`:SVC]'
     {[x;y;z].p.import[x]y}[` sv lib,fnc;hsym mdl]]}
 

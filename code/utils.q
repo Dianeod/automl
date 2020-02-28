@@ -59,14 +59,26 @@ i.updparam:{[t;p;typ]
       typ=`nlp;
       {[t;p]d:i.nlpdefault[];
        d:$[(ty:type p)in 10 -11 99h;
-           [if[10h~ty;p:.aml.i.getdict p];
-            if[-11h~ty;p:.aml.i.getdict$[":"~first p;1_;]p:string p];
+           [if[10h~ty;p:.automl.i.getdict p];
+            if[-11h~ty;p:.automl.i.getdict$[":"~first p;1_;]p:string p];
             $[min key[p]in key d;d,p;
               '`$"You can only pass appropriate keys to nlp"]];
            p~(::);d;
            '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
               " or a dictionary with appropriate key/value pairs"];
            d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
+       typ=`nlppt;
+      {[t;p]d:i.nlpptdefault[];
+       d:$[(ty:type p)in 10 -11 99h;
+           [if[10h~ty;p:.automl.i.getdict p];
+            if[-11h~ty;p:.aml.i.getdict$[":"~first p;1_;]p:string p];
+            $[min key[p]in key d;d,p;
+              '`$"You can only pass appropriate keys to nlppt"]];
+           p~(::);d;
+           '`$"p must be passed the identity `(::)`, a filepath to a parameter flatfile",
+              " or a dictionary with appropriate key/value pairs"];
+          if[1~checkimportnlp[];'simpletransformers not installed];
+           d}[t;p];
       typ=`tseries;
       '`$"This will need to be added once the time-series recipe is in place";
     '`$"Incorrect input type"]}
@@ -106,6 +118,9 @@ i.normaldefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`sigfeats!
 i.nlpdefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`sigfeats!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.automl.prep.i.default;`.automl.xv.fitpredict;
    `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2;`.automl.prep.freshsignificance)}
+i.nlpptdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum!
+  (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.automl.prep.i.default;`.automl.xv.fitpredict;
+   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2;2)}
 
 // Apply an appropriate scoring function to predictions from a model
 /* xtst = test data
@@ -116,7 +131,7 @@ i.nlpdefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`sigfeats!
 /* fnm  = name of the base representation of the function to be applied (reg/multi/bin)
 /. r    > score for the model based on the predictions on test data
 i.scorepred:{[data;bmn;mdl;scf;fnm]
-  pred:$[bmn in i.keraslist;
+  pred:$[bmn in i.keraslist,i.nlplist;
          // Formatting of first param is a result of previous implementation choices
          get[".automl.",fnm,"predict"][(0n;(data 2;0n));mdl];
          mdl[`:predict][data 2]`];
@@ -143,6 +158,7 @@ i.savemdl:{[bmn;bmo;mdls;nms]
 /. r   > table with all information needed for appropriate models to be applied to data
 i.models:{[ptyp;tgt;p]
   if[not ptyp in key proc.i.files;'`$"text file not found"];
+  if[`nlppt~p`typ;ptyp:`nlpclass];
   d:proc.i.txtparse[ptyp;"/code/models/"];
   if[1b~p`tf;
     d:l!d l:key[d]where not `keras=first each value d];
@@ -169,7 +185,7 @@ i.updmodels:{[mdls;tgt]
 // at present this should include the Keras models as a sufficient tuning method
 // has yet to be implemented
 if[1~checkimport[];i.keraslist:`null];
-i.excludelist:i.keraslist,`GaussianNB`LinearRegression;
+i.excludelist:i.keraslist,`GaussianNB`LinearRegression,i.nlplist;
 
 // Dictionary with mappings for console printing to reduce clutter in .automl.runexample
 i.runout:`col`pre`sig`slct`tot`ex`gs`sco`cnf`save!
@@ -254,6 +270,11 @@ i.nlpproc:{[t;p]
   tt:tb[p`features];
   flip tt
   }
+
+i.nlpptproc:{[t]
+ strcol:.ml.i.fndcols[t;"C"];
+ $[1<count strcol;raze each flip t[strcol];raze t[strcol]]
+ } 
 
 
 // Create the folders that are required for the saving of the config,models, images and reports

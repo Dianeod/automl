@@ -28,12 +28,13 @@ proc.runmodels:{[data;tgt;mdls;cnms;p;dt;fpath]
   // Extract the best model, fit on entire training set and predict/score on test set
   // for the appropriate scoring function
   bm_tstart:.z.T;
-  $[bs in i.keraslist;
+  $[bs in i.keraslist,i.nlplist;
     [data:((xtrn;ytrn);(xtst;ytst));
      funcnm:string first exec fnc from mdls where model=bs;
      if[funcnm~"multi";data[;1]:npa@'reverse flip@'./:[;((::;0);(::;1))](0,count ytst)_/:
        value .ml.i.onehot1(,/)(ytrn;ytst)];
-     kermdl:get[".automl.",funcnm,"mdl"][data;p`seed;`$funcnm];
+     mdln:get[".automl.",funcnm,"mdl"];
+     kermdl:$[`nlppt~p`typ;mdln[p;select from mdls where model=bs];mdln[data;p`seed;`$funcnm]];
      bm:get[".automl.",funcnm,"fit"][data;kermdl];
      s2:scf[;ytst]get[".automl.",funcnm,"predict"][data;bm]];
     [bm:(first exec minit from mdls where model=bs)[][];

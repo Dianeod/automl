@@ -21,7 +21,7 @@ run:{[tb;tgt;ftype;ptype;p]
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[(dict[`saveopt]in 1 2)&`nlp~ftype;
+  if[(dict[`saveopt]in 1 2)&ftype in `nlp`nlppt;
      dict[`spath]:1_-8_last spaths`config];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
@@ -34,10 +34,12 @@ run:{[tb;tgt;ftype;ptype;p]
   tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
        ftype=`normal;prep.normalcreate[tb;dict];
        ftype=`nlp;prep.nlpcreate[tb;dict];
+       ftype=`nlppt;prep.nlppteate[tb];
        '`$"Feature extraction type is not currently supported"];
-  feats:get[dict[`sigfeats]][tb 0;tgt];
+  feats:$[ftype~`nlppt;cols tb[0];get[dict[`sigfeats]][tb 0;tgt]];
   // Encode target data if target is a symbol vector
   if[11h~type tgt;tgt:.ml.labelencode tgt];
+  if[`nlppt~ftype;tgt:"j"$tgt];
   // Apply the appropriate train/test split to the data
   // the following currently runs differently if the parameters are defined
   // in a file or through the more traditional dictionary/(::) format
@@ -113,6 +115,8 @@ new:{[t;dt;tm]
     i.freshproc[t;metadata];
      `nlp=typ;
     i.nlpproc[t;metadata];
+     `nlppt=typ;
+    i.nlpptproc[t];
     '`$"This form of operation is not currently supported"
     ];
   $[(mp:metadata[`pylib])in `sklearn`keras;
@@ -123,6 +127,8 @@ new:{[t;dt;tm]
      $[bool;
        [fnm:neg[5]_string lower mdl;get[".automl.",fnm,"predict"][(0n;(data;0n));model]];
        model[`:predict;<]data]];
+     mp~`simpletransformers;[model:.automl.nlpmdl[metadata;metadata`best_model];
+     first model[`:predict;<]$[0h~type data;raze;]data];     
     '`$"The current model type you are attempting to apply is not currently supported"]
   }
 

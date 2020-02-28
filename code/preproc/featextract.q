@@ -54,3 +54,12 @@ prep.nlpcreate:{[t;p]
   if[p[`saveopt]in 1 2;model[`:save][i.ssrwin[path,"/",p[`spath],"/models/w2v.model"]]];
   fe_end:.z.T-fe_start;
   (tb;fe_end)}
+
+prep.nlppteate:{[t]
+  fe_start:.z.T;
+  strcol:.ml.i.fndcols[t;"C"];
+  mat:$[1<count strcol;raze each flip t[strcol];[]raze t[strcol]];
+  strnm:"_" sv string strcol;
+  tb:([]strnm:mat);
+  fe_end:.z.T-fe_start;
+  (tb;fe_end)}

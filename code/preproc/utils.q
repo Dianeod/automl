@@ -28,6 +28,10 @@ prep.i.autotype:{[t;typ;p]
      typ=`nlp;
       [cls:.ml.i.fndcols[t;"sfihjbepmdznuvtC"];
        tb:flip cls!t cls;prep.i.errcol[cols t;cls;typ]];
+    typ=`nlppt;
+     [cls:.ml.i.fndcols[t;"C"];
+      tb:flip cls!t cls;
+      prep.i.errcol[cols t;cls;typ]];
     '`$"This form of feature extraction is not currently supported"];
   tb}
 
@@ -45,7 +49,7 @@ prep.i.describe:{[t]
   times:prep.i.metafn[t;timecols;prep.i.nonnumeric[{`time}]];
   bool :prep.i.metafn[t;boolcols;prep.i.nonnumeric[{`boolean}]];
   text :prep.i.metafn[t;textcols;prep.i.nonnumeric[{`text}]];
-  flip columns!flip num,symb,times,bool
+  flip columns!flip num,symb,times,bool,text
   }
 
 // Length checking to ensure that the table and target are appropriate for the task being performed
@@ -56,7 +60,7 @@ prep.i.lencheck:{[t;tgt;typ;p]
       // Check that the number of unique aggregating sets is the same as number of targets
       if[count[tgt]<>count distinct $[1=count p`aggcols;t[p`aggcols];(,'/)t p`aggcols];
          '`$"Target count must equal count of unique agg values for fresh"];
-      typ in`tseries`normal`nlp;
+      typ in`tseries`normal`nlp`nlppt;
       if[count[tgt]<>count t;
          '`$"Must have the same number of targets as values in table"];
     '`$"Input for typ must be a supported type"];

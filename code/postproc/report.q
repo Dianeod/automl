@@ -32,7 +32,7 @@ post.report:{[dict;dt;fname;ptype]
 
  vd:.ml.df2tab .ml.tab2df[value d:(dti:10&count dict`describe)#dict`describe][`:round][3];
  t:enlist[enlist[`col],cols vd],key[d],'flip value flip vd;
- f:mktab[pdf;t;f;(27-(dti%2))*dti;10;10];
+ f:mktab[pdf;t;f;(35-(dti%2))*dti;10;10];
 
  font[pdf;"Helvetica-Bold";13];
  f:cell[pdf;f;30;"Breakdown of Pre-Processing"];

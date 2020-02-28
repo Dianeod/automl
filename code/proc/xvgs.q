@@ -16,14 +16,15 @@ proc.xv.seed:{[xtrn;ytrn;p;mdls]
   // this needs to be handled differently for sklearn and keras models
   s:$[ms:mdls[`seed]~`seed;
       $[sk;enlist[`random_state]!enlist p`seed;(p[`seed],mdls[`typ])];
-      ::];
-  $[ms&sk;
+      mdls[`fnc]~`nlp;(p;mdls[`model]);::];
+  p1:$[ms&sk;
     // Grid search version of the cross-validation is completed if a random seed
     // and the model is from sklearn, this is in order to incorporate the random state definition.
     // Final parameter upd was required as dict for grid search to be as flexible as possible
     first value get[p[`gs]0][p[`gs]1;1;xtrn;ytrn;p[`prf]mdls`minit;s;enlist[`val]!enlist 0];
     // Otherwise a vanilla cross validation is performed
-    get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]]}
+    get[p[`xv]0][p[`xv]1;1;xtrn;ytrn;p[`prf][mdls`minit;s]]];
+    if[mdls[`fnc]~`nlp;system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"models/ ",(pth:path,"/",p[`spath],"/"),"cache_dir* "]];p1}
 
 
 // Grid search over the set of all hyperparameters outlined in code/models/hyperparams.txt
