@@ -73,7 +73,7 @@ i.updparam:{[t;p;typ]
        d:i.nlpptdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.automl.i.getdict p];
-            if[-11h~ty;p:.aml.i.getdict$[":"~first p;1_;]p:string p];
+            if[-11h~ty;p:.automl.i.getdict$[":"~first p;1_;]p:string p];
             $[min key[p]in key d;d,p;
               '`$"You can only pass appropriate keys to nlppt"]];
            p~(::);d;
@@ -187,6 +187,7 @@ i.updmodels:{[mdls;tgt]
 // at present this should include the Keras models as a sufficient tuning method
 // has yet to be implemented
 if[1~checkimport[];i.keraslist:`null];
+if[1~checkimportnlp[];i.nlplist:`null];
 i.excludelist:i.keraslist,`GaussianNB`LinearRegression,i.nlplist;
 
 // Dictionary with mappings for console printing to reduce clutter in .automl.runexample

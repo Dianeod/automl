@@ -55,4 +55,4 @@ tf:.p.import[`tensorflow];tfs:tf$[2>"I"$first tf[`:__version__]`;[`:set_random_s
 
 / allow multiprocess
 .ml.loadfile`:util/mproc.q
-if[0>system"s";.ml.mproc.init[abs system"s"]("system[\"l automl/automl.q\"]";".aml.loadfile`:init.q")];
+if[0>system"s";.ml.mproc.init[abs system"s"]("system[\"l automl/automl.q\"]";".automl.loadfile`:init.q")];
