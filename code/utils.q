@@ -369,6 +369,9 @@ i.nlp_proc:{[t;p;smdl]
   (.ml.dropconstant prep.i.nullencode[.ml.infreplace tb;med];strcol;model)
   }
 
+// removes nlp models, cache dir and run folders
+i.rmnlpmd:{[p]system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"models/ ",(pth:path,"/",p[`spath],"/"),"cache_dir* "]}
+
 p.word2vec:.p.import[`gensim.models];
 p.sp:.p.import[`spacy];
 p.dr:.p.import[`builtins][`:dir];

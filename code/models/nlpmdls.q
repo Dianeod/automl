@@ -33,7 +33,7 @@ nlpmdl:{[dict;mdls]
  nps[dict`seed];
  tfs[dict`seed];
  trmseed[dict`seed];
- modeln:$[`best_model in key dict;pth,"/model/",string[mdln];nlpdict[mdln]];
+ modeln:$[`best_model in key dict;pth,"/models/",string[mdln];nlpdict[mdln]];
  pydict:`model_type`model_name`use_cuda`num_labels`args!
         (mdln;modeln;0b;$[regmd;1;dict`tgtnum];args);
  m:nlpclass[pykwargs pydict];m}

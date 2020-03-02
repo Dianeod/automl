@@ -39,6 +39,7 @@ run:{[tb;tgt;ftype;ptype;p]
   feats:$[ftype~`nlppt;cols tb[0];get[dict[`sigfeats]][tb 0;tgt]];
   // Encode target data if target is a symbol vector
   if[11h~type tgt;tgt:.ml.labelencode tgt];
+  // Pretrained nlp models return results of type long
   if[`nlppt~ftype;tgt:"j"$tgt];
   // Apply the appropriate train/test split to the data
   // the following currently runs differently if the parameters are defined
@@ -74,6 +75,7 @@ run:{[tb;tgt;ftype;ptype;p]
     -1 i.runout[`cnf];show .ml.conftab[pred;tts`ytest];
     if[dict[`saveopt]in 1 2;post.i.displayCM[value .ml.confmat[pred;tts`ytest];`$string asc distinct pred,tts`ytest;"";();bm 1;spaths]]];
   // Save down a pdf report summarizing the running of the pipeline
+  if[(ftype~`nlppt)&dict[`saveopt] in 0 1;i.rmnlpmd[dict]];
   if[2=dict`saveopt;
     -1 i.runout[`save],i.ssrsv[spaths[1]`report];
     report_param:post.i.reportdict[ctb;bm;tb;path;(prms 1;score;dict`xv;dict`gs);spaths;dscrb];
@@ -128,7 +130,7 @@ new:{[t;dt;tm]
        [fnm:neg[5]_string lower mdl;get[".automl.",fnm,"predict"][(0n;(data;0n));model]];
        model[`:predict;<]data]];
      mp~`simpletransformers;[model:.automl.nlpmdl[metadata;metadata`best_model];
-     first model[`:predict;<]$[0h~type data;raze;]data];     
+     first model[`:predict;<]$[0h~type data[0];raze;]data];     
     '`$"The current model type you are attempting to apply is not currently supported"]
   }
 
