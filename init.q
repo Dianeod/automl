@@ -19,7 +19,7 @@ $[0~checkimport[];
   [-1"Requirements for deep learning models not available, these will not be run";]]
 $[0~checkimportnlp[];
   loadfile`:code/models/nlpmdls.q;
-  [-1"Requirements for nlp pre-trained models not available, these will not be run";]]
+  [-1"Requirements for NLP pre-trained models not available, these will not be run";]]
 loadfile`:code/postproc/plots.q
 loadfile`:code/postproc/report.q
 loadfile`:code/postproc/utils.q
@@ -30,4 +30,4 @@ loadfile`:code/aml.q
 
 $[(::)~@[{system"l ",x};"nlp/nlp.q";{[err]err;0b}];
   .nlp.loadfile`:init.q;
-  [-1"Requirements for NLP not available, NLP models will not be run";]]
+  [-1"Requirements for NLP-Spacy not available, NLP-Spacy models will not be run";]]

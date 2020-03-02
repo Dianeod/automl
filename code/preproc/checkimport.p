@@ -12,4 +12,3 @@ p)def< checkimportnlp():
     return(0)
   except:
     return(1)
-

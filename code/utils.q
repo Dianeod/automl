@@ -57,7 +57,8 @@ i.updparam:{[t;p;typ]
               " or a dictionary with appropriate key/value pairs"];
 	   d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
       typ=`nlp;
-      {[t;p]d:i.nlpdefault[];
+      {[t;p]i.checknlp[t];
+       d:i.nlpdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.automl.i.getdict p];
             if[-11h~ty;p:.automl.i.getdict$[":"~first p;1_;]p:string p];
@@ -68,7 +69,8 @@ i.updparam:{[t;p;typ]
               " or a dictionary with appropriate key/value pairs"];
            d,enlist[`tf]!enlist 1~checkimport[]}[t;p];
        typ=`nlppt;
-      {[t;p]d:i.nlpptdefault[];
+      {[t;p]i.checknlp[t];
+       d:i.nlpptdefault[];
        d:$[(ty:type p)in 10 -11 99h;
            [if[10h~ty;p:.automl.i.getdict p];
             if[-11h~ty;p:.aml.i.getdict$[":"~first p;1_;]p:string p];
@@ -118,9 +120,9 @@ i.normaldefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`sigfeats!
 i.nlpdefault:{`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`sigfeats!
   ((`.ml.xv.kfshuff;5);(`.ml.gs.kfshuff;5);`.automl.prep.i.default;`.automl.xv.fitpredict;
    `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2;`.automl.prep.freshsignificance)}
-i.nlpptdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum!
+i.nlpptdefault:{`args`xv`gs`funcs`prf`scf`seed`saveopt`hld`tts`sz`tgtnum`sigfeats!
   (();(`.ml.xv.kfshuff;2);(`.ml.gs.kfshuff;2);`.automl.prep.i.default;`.automl.xv.fitpredict;
-   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2;2)}
+   `class`reg!(`.ml.accuracy;`.ml.mse);`rand_val;2;0.2;`.ml.traintestsplit;0.2;2;`.automl.prep.freshsignificance)}
 
 // Apply an appropriate scoring function to predictions from a model
 /* xtst = test data
@@ -268,13 +270,13 @@ i.nlpproc:{[t;p]
   strcol:r 1;tb:r 0;
   if[0<count cols[t] except strcol;tb:tb,'(prep.normalcreate[(strcol)_t;p])[0]];
   tt:tb[p`features];
-  flip tt
-  }
+  flip tt}
 
+// If more than one text column, joins them into singular column
+/. r > table with single text column
 i.nlpptproc:{[t]
- strcol:.ml.i.fndcols[t;"C"];
- $[1<count strcol;raze each flip t[strcol];raze t[strcol]]
- } 
+  strcol:.ml.i.fndcols[t;"C"];
+  $[1<count strcol;raze each flip t[strcol];raze t[strcol]]} 
 
 
 // Create the folders that are required for the saving of the config,models, images and reports
@@ -370,7 +372,8 @@ i.nlp_proc:{[t;p;smdl]
   }
 
 // removes nlp models, cache dir and run folders
-i.rmnlpmd:{[p]system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"models/ ",(pth:path,"/",p[`spath],"/"),"cache_dir* "]}
+i.rmnlpmd:{[p]system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"models/ ",
+          (pth:path,"/",p[`spath],"/"),"cache_dir* "]}
 
 p.word2vec:.p.import[`gensim.models];
 p.sp:.p.import[`spacy];

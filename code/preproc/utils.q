@@ -25,11 +25,11 @@ prep.i.autotype:{[t;typ;p]
       // restore the aggregating columns 
       tb:flip (l!t l,:()),cls!t cls;
       prep.i.errcol[cols t;cols tb;typ]];
-     typ=`nlp;
-      [cls:.ml.i.fndcols[t;"sfihjbepmdznuvtC"];
-       tb:flip cls!t cls;prep.i.errcol[cols t;cls;typ]];
+    typ=`nlp;
+    [cls:.ml.i.fndcols[t;"sfihjbepmdznuvtC"];
+      tb:flip cls!t cls;prep.i.errcol[cols t;cls;typ]];
     typ=`nlppt;
-     [cls:.ml.i.fndcols[t;"C"];
+    [cls:.ml.i.fndcols[t;"C"];
       tb:flip cls!t cls;
       prep.i.errcol[cols t;cls;typ]];
     '`$"This form of feature extraction is not currently supported"];
@@ -166,9 +166,3 @@ prep.i.metafn:{[t;sl;fl]$[0<count sl;fl@\:/:flip(sl)#t;()]}
 
 // List of functions to be applied in metadata function for non-numeric data
 prep.i.nonnumeric:{[t](count;{count distinct x};{};{};{};{};t)}
-
-// Create dictionary indicating the percentage of how many times a value appears in per row
-/* attrs = dictionary of subset of attrtibutes
-/* lst   = list of all possible attribues
-/. r     > dictionary
-prep.i.percdict:{[attrs;lst]((lst!(count lst)#0f)),`float$(count each attrs)%sum count each attrs}

@@ -15,28 +15,28 @@ nlpfitscore:{[d;dict;mdl]
   nlppredict[d;m]}
 
 nlpdict:(!). flip(
- (`bert;         "bert-base-uncased");
- (`roberta;      "roberta-base");
- (`xlnet;        "xlnet-base-cased");
- (`xlm;          "xlm-mlm-en-2048");
- (`distilbert;   "distilbert-base-uncased-distilled-squad");
- (`albert;     "albert-base-v1");
- (`camembert;    "camembert-base"))
+  (`bert;         "bert-base-uncased");
+  (`roberta;      "roberta-base");
+  (`xlnet;        "xlnet-base-cased");
+  (`xlm;          "xlm-mlm-en-2048");
+  (`distilbert;   "distilbert-base-uncased-distilled-squad");
+  (`albert;     "albert-base-v1");
+  (`camembert;    "camembert-base"))
 
 
 nlpmdl:{[dict;mdls] 
- args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data`regression`tensorboard_dir!
-  (1b;0b;pth,"/models/",string[mdln:lower$[type[mdls]in neg[11h];mdls;first mdls`model]];
-  pth,"/cache_dir";1b;0b;regmd:`reg~dict[`ptyp];(pth:path,"/",dict[`spath]),"/runs");
- args,:dict`args;
- system["S ",string[dict`seed]];
- nps[dict`seed];
- tfs[dict`seed];
- trmseed[dict`seed];
- modeln:$[`best_model in key dict;pth,"/models/",string[mdln];nlpdict[mdln]];
- pydict:`model_type`model_name`use_cuda`num_labels`args!
-        (mdln;modeln;0b;$[regmd;1;dict`tgtnum];args);
- m:nlpclass[pykwargs pydict];m}
+  args:`overwrite_output_dir`use_multiprocessing`output_dir`cache_dir`silent`reprocess_input_data`regression`tensorboard_dir!
+   (1b;0b;pth,"/models/",string[mdln:lower$[type[mdls]in neg[11h];mdls;first mdls`model]];
+   pth,"/cache_dir";1b;0b;regmd:`reg~dict[`ptyp];(pth:path,"/",dict[`spath]),"/runs");
+  args,:dict`args;
+  system["S ",string[dict`seed]];
+  nps[dict`seed];
+  tfs[dict`seed];
+  trmseed[dict`seed];
+  modeln:$[`best_model in key dict;pth,"/models/",string[mdln];nlpdict[mdln]];
+  pydict:`model_type`model_name`use_cuda`num_labels`args!
+    (mdln;modeln;0b;$[regmd;1;dict`tgtnum];args);
+  m:nlpclass[pykwargs pydict];m}
 
 /. r > the fit simpletransformers model
 nlpfit:{[d;m]m[`:train_model][pdD((d[0]0),'enlist each d[0]1)];m}

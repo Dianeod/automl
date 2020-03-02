@@ -27,7 +27,6 @@ prep.freshsignificance:{[t;tgt]
   $[0<>count k:.ml.fresh.significantfeatures[t;tgt;.ml.fresh.percentile 0.25];
     k;[-1 prep.i.freshsigerr;cols t]]}
 
-
 // Create features for 'normal problems' -> one target for each row no time dependency
 // or fresh like structure
 /. r > table with features created in accordance with the normal feature creation procedure 
@@ -55,7 +54,9 @@ prep.nlpcreate:{[t;p]
   fe_end:.z.T-fe_start;
   (tb;fe_end)}
 
-prep.nlppteate:{[t]
+// For pretrained nlp models, join any text columns into a singular column
+/. r > table with single text column to be passed to pretrianed model
+prep.nlpptcreate:{[t]
   fe_start:.z.T;
   strcol:.ml.i.fndcols[t;"C"];
   mat:$[1<count strcol;raze each flip t[strcol];[]raze t[strcol]];

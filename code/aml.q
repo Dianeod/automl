@@ -15,14 +15,12 @@ run:{[tb;tgt;ftype;ptype;p]
   // Extract & update the dictionary used to define the workflow
   dict:i.updparam[tb;p;ftype],enlist[`typ]!enlist ftype;
   // Check that the functions to overwrite default behaviour exist in process
-  if[ftype~`nlp;i.checknlp[tb]];
   i.checkfuncs[dict];
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
   if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[(dict[`saveopt]in 1 2)&ftype in `nlp`nlppt;
-     dict[`spath]:1_-8_last spaths`config];
+  if[(dict[`saveopt]in 1 2)&ftype in `nlp`nlppt;dict[`spath]:1_-8_last spaths`config];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -34,13 +32,11 @@ run:{[tb;tgt;ftype;ptype;p]
   tb:$[ftype=`fresh;prep.freshcreate[tb;dict];
        ftype=`normal;prep.normalcreate[tb;dict];
        ftype=`nlp;prep.nlpcreate[tb;dict];
-       ftype=`nlppt;prep.nlppteate[tb];
+       ftype=`nlppt;prep.nlpptcreate[tb];
        '`$"Feature extraction type is not currently supported"];
-  feats:$[ftype~`nlppt;cols tb[0];get[dict[`sigfeats]][tb 0;tgt]];
+  feats:get[dict[`sigfeats]][tb 0;tgt];
   // Encode target data if target is a symbol vector
-  if[11h~type tgt;tgt:.ml.labelencode tgt];
-  // Pretrained nlp models return results of type long
-  if[`nlppt~ftype;tgt:"j"$tgt];
+  if[(`nlppt~ftype)|11h~type tgt;tgt:.ml.labelencode tgt];
   // Apply the appropriate train/test split to the data
   // the following currently runs differently if the parameters are defined
   // in a file or through the more traditional dictionary/(::) format
@@ -75,7 +71,7 @@ run:{[tb;tgt;ftype;ptype;p]
     -1 i.runout[`cnf];show .ml.conftab[pred;tts`ytest];
     if[dict[`saveopt]in 1 2;post.i.displayCM[value .ml.confmat[pred;tts`ytest];`$string asc distinct pred,tts`ytest;"";();bm 1;spaths]]];
   // Save down a pdf report summarizing the running of the pipeline
-  if[(ftype~`nlppt)&dict[`saveopt] in 0 1;i.rmnlpmd[dict]];
+  if[(ftype~`nlppt)&dict[`saveopt] in 0;i.rmnlpmd[dict]];
   if[2=dict`saveopt;
     -1 i.runout[`save],i.ssrsv[spaths[1]`report];
     report_param:post.i.reportdict[ctb;bm;tb;path;(prms 1;score;dict`xv;dict`gs);spaths;dscrb];
