@@ -376,8 +376,9 @@ i.nlp_proc:{[t;p;smdl]
 i.rmnlpmd:{[p]system[$[.z.o like "w*";"del /f ";"rm -r "],pth,"runs/ ",pth,"models/ ",
           (pth:path,"/",p[`spath],"/"),"cache_dir* "]}
 
-p.word2vec:.p.import[`gensim.models];
-p.sp:.p.import[`spacy];
-p.dr:.p.import[`builtins][`:dir];
-p.pos:p.dr[p.sp[`:parts_of_speech]]`;
-p.nlpm:p.sp[`:load]["en_core_web_sm"];
+if[0~checkimportnlp[];
+  p.word2vec:.p.import[`gensim.models];
+  p.sp:.p.import[`spacy];
+  p.dr:.p.import[`builtins][`:dir];
+  p.pos:p.dr[p.sp[`:parts_of_speech]]`;
+  p.nlpm:p.sp[`:load]["en_core_web_sm"];]
