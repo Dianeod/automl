@@ -19,8 +19,8 @@ run:{[tb;tgt;ftype;ptype;p]
   // update the seed randomly if user does not specify the seed in p
   if[`rand_val~dict[`seed];dict[`seed]:"j"$.z.t];
   // if required to save data construct the appropriate folders
-  if[dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
-  if[(dict[`saveopt]in 1 2)&ftype in `nlp`nlppt;dict[`spath]:1_-8_last spaths`config];
+  if[savemdl:dict[`saveopt]in 1 2;spaths:i.pathconstruct[dtdict;dict`saveopt]];
+  if[savemdl&ftype in `nlp`nlppt;dict[`spath]:1_-8_last spaths`config];
   mdls:i.models[ptype;tgt;dict];
   system"S ",string dict`seed;
   tb:prep.i.autotype[tb;ftype;dict];
@@ -36,7 +36,8 @@ run:{[tb;tgt;ftype;ptype;p]
        '`$"Feature extraction type is not currently supported"];
   feats:get[dict[`sigfeats]][tb 0;tgt];
   // Encode target data if target is a symbol vector
-  if[(`nlppt~ftype)|11h~type tgt;tgt:.ml.labelencode tgt];
+  if[nlptyp:(`nlppt~ftype)|11h~type tgt;tgt:.ml.labelencode tgt];
+  if[nlpytp;dict[`tgtnum]:count distinct tgt];
   // Apply the appropriate train/test split to the data
   // the following currently runs differently if the parameters are defined
   // in a file or through the more traditional dictionary/(::) format
@@ -69,15 +70,15 @@ run:{[tb;tgt;ftype;ptype;p]
   // Print confusion matrix for classification problems
   if[ptype~`class;
     -1 i.runout[`cnf];show .ml.conftab[pred;tts`ytest];
-    if[dict[`saveopt]in 1 2;post.i.displayCM[value .ml.confmat[pred;tts`ytest];`$string asc distinct pred,tts`ytest;"";();bm 1;spaths]]];
+    if[savemdl;post.i.displayCM[value .ml.confmat[pred;tts`ytest];`$string asc distinct pred,tts`ytest;"";();bm 1;spaths]]];
   // Save down a pdf report summarizing the running of the pipeline
-  if[(ftype~`nlppt)&dict[`saveopt] in 0;i.rmnlpmd[dict]];
+  if[nlptyp&dict[`saveopt] in 0;i.rmnlpmd[dict]];
   if[2=dict`saveopt;
     -1 i.runout[`save],i.ssrsv[spaths[1]`report];
     report_param:post.i.reportdict[ctb;bm;tb;path;(prms 1;score;dict`xv;dict`gs);spaths;dscrb];
     if[ptype=`class;ptype:$[2<count distinct tgt;`multi_classification;`binary_classification]];
     post.report[report_param;dtdict;spaths[0]`report;ptype]];
-  if[dict[`saveopt]in 1 2;
+  if[savemdl;
     // Extract the Python library from which the best model was derived, used for model rerun
     pylib:?[mdls;enlist(=;`model;enlist bm 1);();`lib];
     // additional metadata information to be saved to disk

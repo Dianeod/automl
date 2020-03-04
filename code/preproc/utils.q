@@ -166,3 +166,5 @@ prep.i.metafn:{[t;sl;fl]$[0<count sl;fl@\:/:flip(sl)#t;()]}
 
 // List of functions to be applied in metadata function for non-numeric data
 prep.i.nonnumeric:{[t](count;{count distinct x};{};{};{};{};t)}
+
+prep.i.percdict:{[attrs;lst]((lst!(count lst)#0f)),`float$(count each attrs)%sum count each attrs}
