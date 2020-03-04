@@ -37,7 +37,7 @@ run:{[tb;tgt;ftype;ptype;p]
   feats:get[dict[`sigfeats]][tb 0;tgt];
   // Encode target data if target is a symbol vector
   if[nlptyp:(`nlppt~ftype)|11h~type tgt;tgt:.ml.labelencode tgt];
-  if[nlpytp;dict[`tgtnum]:count distinct tgt];
+  if[nlptyp;dict[`tgtnum]:count distinct tgt];
   // Apply the appropriate train/test split to the data
   // the following currently runs differently if the parameters are defined
   // in a file or through the more traditional dictionary/(::) format
